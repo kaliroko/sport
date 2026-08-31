@@ -382,7 +382,7 @@ class _ExerciseCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                GlassButton.custom(
+                child: GlassButton.custom(
                   onTap: onTap,
                   width: double.infinity,
                   height: 48,
