@@ -44,7 +44,7 @@ class DebugUploadService extends ChangeNotifier {
 
     if (Platform.isAndroid) {
       info.addAll({
-        'model': Platform.locale.name,
+        'model': Platform.localeName,
         'androidVersion': Platform.version,
       });
     }
@@ -86,7 +86,7 @@ class DebugUploadService extends ChangeNotifier {
 
     // 收集身体测量数据
     try {
-      final measurements = await DatabaseManager.measurementRepository.getRecentMeasurements(30);
+      final measurements = await DatabaseManager.measurementRepository.getAllMeasurements();
       data['measurements'] = measurements.map((m) => m.toMap()).toList();
       data['measurement_count'] = measurements.length;
     } catch (e) {

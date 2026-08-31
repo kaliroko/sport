@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:metamorphosis_checkin/services/user_profile_service.dart';
 import 'package:metamorphosis_checkin/utils/constants.dart';
 import 'package:metamorphosis_checkin/theme/app_theme.dart';
+import 'package:metamorphosis_checkin/models/user_profile.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});

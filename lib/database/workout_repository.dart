@@ -1,7 +1,6 @@
 /// 运动日志数据仓库
 library;
 
-import 'package:metamorphosis_checkin/database/database.dart';
 import 'package:metamorphosis_checkin/models/workout_log.dart';
 import 'package:sqflite/sqflite.dart';
 

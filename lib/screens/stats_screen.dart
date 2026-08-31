@@ -114,19 +114,11 @@ class _CompletionHeatmapWidget extends StatelessWidget {
 }
 
 // fl_chart 0.65+ 辅助函数
-AxisLabelWidgetFn _makeLabelFn(double Function(double) builder) {
-  return AxisLabelWidgetFn(builder);
-}
-
-class AxisLabelWidgetFn {
-  final double Function(double) _builder;
-  const AxisLabelWidgetFn(this._builder);
-  List<Widget> call(ViewportDistanceMeta viewportSpace) {
-    return viewportSpace.map(_builder).map((v) => Text(
-      v.toStringAsFixed(0),
-      style: const TextStyle(color: AppTheme.textHint, fontSize: 10),
-    )).toList();
-  }
+Widget _makeTitleWidget(String Function(double) builder) {
+  return (double value, TitleMeta meta) => Text(
+    builder(value),
+    style: const TextStyle(color: AppTheme.textHint, fontSize: 10),
+  );
 }
 
 class _ExerciseTrendChart extends StatelessWidget {
@@ -164,16 +156,25 @@ class _ExerciseTrendChart extends StatelessWidget {
               LineChartData(
                 gridData: const FlGridData(show: false),
                 titlesData: FlTitlesData(
-                  leftTitles: AxisTitles(side: AxisSide.left, axisLabelWidgetFn: _makeLabelFn((v) => v / 5)),
-                  bottomTitles: AxisTitles(
-                    side: AxisSide.bottom,
-                    axisLabelWidgetFn: _makeLabelFn((v) {
-                      final index = v.toInt();
-                      return index >= 0 && index < sortedDates.length ? sortedDates[index].substring(5) : '';
-                    }),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 44,
+                      getTitlesWidget: _makeTitleWidget((v) => (v / 5).toStringAsFixed(0)),
+                    ),
                   ),
-                  rightTitles: const AxisTitles(side: AxisSide.right),
-                  topTitles: const AxisTitles(side: AxisSide.top),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      getTitlesWidget: _makeTitleWidget((v) {
+                        final index = v.toInt();
+                        return index >= 0 && index < sortedDates.length ? sortedDates[index].substring(5) : '';
+                      }),
+                    ),
+                  ),
+                  rightTitles: const AxisTitles(),
+                  topTitles: const AxisTitles(),
                 ),
                 borderData: FlBorderData(show: false),
                 lineBarsData: [
@@ -232,16 +233,25 @@ class _DurationTrendChart extends StatelessWidget {
               LineChartData(
                 gridData: const FlGridData(show: false),
                 titlesData: FlTitlesData(
-                  leftTitles: AxisTitles(side: AxisSide.left, axisLabelWidgetFn: _makeLabelFn((v) => (v / 60).round())),
-                  bottomTitles: AxisTitles(
-                    side: AxisSide.bottom,
-                    axisLabelWidgetFn: _makeLabelFn((v) {
-                      final index = v.toInt();
-                      return index >= 0 && index < sortedDates.length ? sortedDates[index].substring(5) : '';
-                    }),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 44,
+                      getTitlesWidget: _makeTitleWidget((v) => (v / 60).round().toString()),
+                    ),
                   ),
-                  rightTitles: const AxisTitles(side: AxisSide.right),
-                  topTitles: const AxisTitles(side: AxisSide.top),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      getTitlesWidget: _makeTitleWidget((v) {
+                        final index = v.toInt();
+                        return index >= 0 && index < sortedDates.length ? sortedDates[index].substring(5) : '';
+                      }),
+                    ),
+                  ),
+                  rightTitles: const AxisTitles(),
+                  topTitles: const AxisTitles(),
                 ),
                 borderData: FlBorderData(show: false),
                 lineBarsData: [
@@ -311,16 +321,19 @@ class _CardioDurationChart extends StatelessWidget {
                 alignment: BarChartAlignment.spaceAround,
                 gridData: const FlGridData(show: false),
                 titlesData: FlTitlesData(
-                  leftTitles: const AxisTitles(side: AxisSide.left),
+                  leftTitles: const AxisTitles(),
                   bottomTitles: AxisTitles(
-                    side: AxisSide.bottom,
-                    axisLabelWidgetFn: _makeLabelFn((v) {
-                      final index = v.toInt();
-                      return index >= 0 && index < sortedWeeks.length ? sortedWeeks[index].substring(5) : '';
-                    }),
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      getTitlesWidget: _makeTitleWidget((v) {
+                        final index = v.toInt();
+                        return index >= 0 && index < sortedWeeks.length ? sortedWeeks[index].substring(5) : '';
+                      }),
+                    ),
                   ),
-                  rightTitles: const AxisTitles(side: AxisSide.right),
-                  topTitles: const AxisTitles(side: AxisSide.top),
+                  rightTitles: const AxisTitles(),
+                  topTitles: const AxisTitles(),
                 ),
                 borderData: FlBorderData(show: false),
                 barGroups: barGroups,
@@ -376,16 +389,19 @@ class _DailyCompletionChart extends StatelessWidget {
                 alignment: BarChartAlignment.spaceAround,
                 gridData: const FlGridData(show: false),
                 titlesData: FlTitlesData(
-                  leftTitles: const AxisTitles(side: AxisSide.left),
+                  leftTitles: const AxisTitles(),
                   bottomTitles: AxisTitles(
-                    side: AxisSide.bottom,
-                    axisLabelWidgetFn: _makeLabelFn((v) {
-                      final index = v.toInt();
-                      return index >= 0 && index < last14Days.length ? last14Days[index].date.substring(5) : '';
-                    }),
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      getTitlesWidget: _makeTitleWidget((v) {
+                        final index = v.toInt();
+                        return index >= 0 && index < last14Days.length ? last14Days[index].date.substring(5) : '';
+                      }),
+                    ),
                   ),
-                  rightTitles: const AxisTitles(side: AxisSide.right),
-                  topTitles: const AxisTitles(side: AxisSide.top),
+                  rightTitles: const AxisTitles(),
+                  topTitles: const AxisTitles(),
                 ),
                 borderData: FlBorderData(show: false),
                 barGroups: barGroups,

@@ -389,6 +389,7 @@ class _ExerciseCard extends StatelessWidget {
                 GlassButton.custom(
                   onTap: onTap,
                   width: double.infinity,
+                  height: 48,
                   child: const Text(
                     '开始训练',
                     style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
@@ -399,6 +400,7 @@ class _ExerciseCard extends StatelessWidget {
               if (movement.type == MovementType.duration)
                 GlassButton.custom(
                   onTap: onStart,
+                  height: 48,
                   child: const Text(
                     '计时器',
                     style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
@@ -452,6 +454,7 @@ class _TimerFloatingHeader extends SliverPersistentHeaderDelegate {
             ),
             GlassButton.custom(
               onTap: onStop,
+              height: 48,
               child: const Text(
                 '完成',
                 style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
