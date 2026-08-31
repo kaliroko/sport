@@ -1,0 +1,5 @@
+# Android Keystore - 请替换为您的密钥
+storePassword=
+keyPassword=
+keyAlias=upload
+storeFile=../../keystore.jks

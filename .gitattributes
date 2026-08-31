@@ -1,0 +1,14 @@
+# 强制使用 LF 换行符（CI 构建兼容性）
+* text=auto eol=lf
+
+# Dart/Flutter 文件
+*.dart text
+*.yaml text
+*.xml text
+*.json text
+
+# Shell 脚本
+*.sh text eol=lf
+
+# 文档
+*.md text eol=lf
