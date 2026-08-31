@@ -152,6 +152,7 @@ class CheckInService with ChangeNotifier {
   }
 
   /// 关闭服务
+  @override
   void dispose() {
     _completionRateStream.close();
     _streakStream.close();

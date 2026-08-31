@@ -75,6 +75,7 @@ class WorkoutService with ChangeNotifier {
     };
   }
 
+  @override
   void dispose() {
     _progressStream.close();
   }

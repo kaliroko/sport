@@ -1,9 +1,7 @@
-# Analysis options for this project
-
-include: package:flutter_lints/flutter.yaml
-
-linter:
-  rules:
-    prefer_const_constructors: true
-    prefer_const_literals_to_create_immutables: true
-    avoid_print: false
+# 排除 vendor 中的测试代码分析
+# vendor/liquid_glass_widgets/test/ 使用 alchemist 包进行 golden 测试，
+# 该包不是本项目的依赖，因此 CI analyze 会报错。
+# 此处配置禁止对该目录进行分析。
+analyzer:
+  exclude:
+    - "vendor/liquid_glass_widgets/test/**"

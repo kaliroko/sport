@@ -6,10 +6,6 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:metamorphosis_checkin/database/app_database.dart';
-import 'package:metamorphosis_checkin/models/daily_check_in.dart';
-import 'package:metamorphosis_checkin/models/workout_log.dart';
-import 'package:metamorphosis_checkin/models/user_profile.dart';
-import 'package:metamorphosis_checkin/models/body_measurement.dart';
 
 class DebugUploadService extends ChangeNotifier {
   static const String _defaultServerUrl =

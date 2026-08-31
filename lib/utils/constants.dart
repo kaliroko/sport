@@ -1,9 +1,6 @@
 /// 应用常量配置
 library;
 
-import 'package:flutter/material.dart';
-import 'package:metamorphosis_checkin/models/daily_quote.dart';
-
 
 // 训练类型
 enum WorkoutType { strength, cardio, stretch, rest }
