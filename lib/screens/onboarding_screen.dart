@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:metamorphosis_checkin/services/user_profile_service.dart';
-import 'package:metamorphosis_checkin/utils/constants.dart';
+import 'package:metamorphosis_checkin/utils/constants.dart' as constants;
 import 'package:metamorphosis_checkin/theme/app_theme.dart';
 import 'package:metamorphosis_checkin/models/user_profile.dart';
 
@@ -22,7 +22,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _ageController = TextEditingController(text: '16');
   final _heightController = TextEditingController(text: '170');
   final _weightController = TextEditingController(text: '65');
-  SchoolType _schoolType = SchoolType.commute;
+  constants.SchoolType _schoolType = constants.SchoolType.commute;
   int _currentWeek = 1;
 
   @override
