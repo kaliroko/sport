@@ -130,7 +130,7 @@ class _MainScreenState extends State<MainScreen> {
         borderRadius: BorderRadius.circular(24),
         child: GlassBottomBar(
           quality: GlassQuality.premium,
-          glassSettings: RecommendedGlassSettings.bottomBar,
+          glassSettings: null,
           tabs: [
             GlassBottomBarTab(
               label: '今日',

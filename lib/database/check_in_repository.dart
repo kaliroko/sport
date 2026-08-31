@@ -3,6 +3,7 @@ library;
 
 import 'package:metamorphosis_checkin/database/database.dart';
 import 'package:metamorphosis_checkin/models/daily_check_in.dart';
+import 'package:sqflite/sqflite.dart';
 
 class CheckInRepository {
   final Database _db;

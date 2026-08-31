@@ -114,7 +114,7 @@ class _WorkoutScreenContentState extends State<_WorkoutScreenContent> with Ticke
     final week = context.watch<UserProfileService>().profile?.currentWeek ?? 1;
 
     return AdaptiveLiquidGlassLayer(
-      settings: RecommendedGlassSettings.standard,
+      settings: const LiquidGlassSettings(),
       quality: GlassQuality.standard,
       blendAmount: 10.0,
       child: CustomScrollView(

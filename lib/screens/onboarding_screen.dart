@@ -57,7 +57,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return AdaptiveLiquidGlassLayer(
-      settings: RecommendedGlassSettings.standard,
+      settings: const LiquidGlassSettings(),
       quality: GlassQuality.standard,
       blendAmount: 10.0,
       child: Scaffold(

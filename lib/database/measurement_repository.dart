@@ -3,6 +3,7 @@ library;
 
 import 'package:metamorphosis_checkin/database/database.dart';
 import 'package:metamorphosis_checkin/models/body_measurement.dart';
+import 'package:sqflite/sqflite.dart';
 
 class MeasurementRepository {
   final Database _db;

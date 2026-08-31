@@ -31,12 +31,11 @@ class _StatsScreenContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AdaptiveLiquidGlassLayer(
-      settings: RecommendedGlassSettings.standard,
+      settings: const LiquidGlassSettings(),
       quality: GlassQuality.standard,
       blendAmount: 10.0,
       child: CustomScrollView(
         slivers: [
-          // 顶部标题
           SliverToBoxAdapter(
             child: SafeArea(
               bottom: false,
@@ -53,18 +52,13 @@ class _StatsScreenContent extends StatelessWidget {
               ),
             ),
           ),
-
-          // 热力图
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             sliver: SliverToBoxAdapter(
               child: const _CompletionHeatmapWidget(),
             ),
           ),
-
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-          // 俯卧撑趋势
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             sliver: SliverToBoxAdapter(
@@ -74,10 +68,7 @@ class _StatsScreenContent extends StatelessWidget {
               ),
             ),
           ),
-
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-          // 平板支撑趋势
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             sliver: SliverToBoxAdapter(
@@ -87,27 +78,20 @@ class _StatsScreenContent extends StatelessWidget {
               ),
             ),
           ),
-
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-          // 有氧时长柱状图
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             sliver: SliverToBoxAdapter(
               child: const _CardioDurationChart(),
             ),
           ),
-
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-          // 打卡完成率柱状图
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             sliver: SliverToBoxAdapter(
               child: const _DailyCompletionChart(),
             ),
           ),
-
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
@@ -122,47 +106,48 @@ class _CompletionHeatmapWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final checkIns = context.watch<CheckInService>().historicalCheckIns;
     final completionData = <String, double>{};
-    
     for (final checkIn in checkIns) {
       completionData[checkIn.date] = checkIn.completionRate;
     }
-
     return CompletionHeatmap(completionData: completionData);
+  }
+}
+
+// fl_chart 0.65+ 辅助函数
+AxisLabelWidgetFn _makeLabelFn(double Function(double) builder) {
+  return AxisLabelWidgetFn(builder);
+}
+
+class AxisLabelWidgetFn {
+  final double Function(double) _builder;
+  const AxisLabelWidgetFn(this._builder);
+  List<Widget> call(ViewportDistanceMeta viewportSpace) {
+    return viewportSpace.map(_builder).map((v) => Text(
+      v.toStringAsFixed(0),
+      style: const TextStyle(color: AppTheme.textHint, fontSize: 10),
+    )).toList();
   }
 }
 
 class _ExerciseTrendChart extends StatelessWidget {
   final String exerciseName;
   final Color color;
-
-  const _ExerciseTrendChart({
-    required this.exerciseName,
-    required this.color,
-  });
+  const _ExerciseTrendChart({required this.exerciseName, required this.color});
 
   @override
   Widget build(BuildContext context) {
     final logs = context.watch<WorkoutService>().logs;
-    final exerciseLogs = logs
-        .where((log) => log.exerciseName == exerciseName)
-        .toList();
+    final exerciseLogs = logs.where((log) => log.exerciseName == exerciseName).toList();
+    if (exerciseLogs.isEmpty) return _EmptyChartCard();
 
-    if (exerciseLogs.isEmpty) {
-      return _EmptyChartCard();
-    }
-
-    // 按日期聚合
     final Map<String, int> dailyTotals = {};
     for (final log in exerciseLogs) {
       final total = log.reps * log.sets;
       dailyTotals[log.date] = (dailyTotals[log.date] ?? 0) + total;
     }
-
     final sortedDates = dailyTotals.keys.toList()..sort();
     final spots = sortedDates.asMap().entries.map((entry) {
-      final index = entry.key;
-      final date = entry.value;
-      return FlSpot(index.toDouble(), dailyTotals[date]!.toDouble());
+      return FlSpot(entry.key.toDouble(), dailyTotals[entry.value]!.toDouble());
     }).toList();
 
     return GlassCard(
@@ -170,54 +155,22 @@ class _ExerciseTrendChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '$exerciseName 总次数趋势',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text('$exerciseName 总次数趋势',
+              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
           SizedBox(
             height: 200,
             child: LineChart(
               LineChartData(
-                gridData: FlGridData(show: false),
+                gridData: const FlGridData(show: false),
                 titlesData: FlTitlesData(
-                  leftTitles: AxisTitles(
-                    side: AxisSide.left,
-                    axisLabelsProvider: (viewportSpace) {
-                      return viewportSpace.map((space) {
-                        return AxisLabelWidget(
-                          space: space,
-                          isLabelShown: true,
-                          label: Text(
-                            (space.value / 5).round().toString(),
-                            style: const TextStyle(color: AppTheme.textHint, fontSize: 10),
-                          ),
-                        );
-                      }).toList();
-                    },
-                  ),
+                  leftTitles: AxisTitles(side: AxisSide.left, axisLabelWidgetFn: _makeLabelFn((v) => v / 5)),
                   bottomTitles: AxisTitles(
                     side: AxisSide.bottom,
-                    axisLabelsProvider: (viewportSpace) {
-                      return viewportSpace.map((space) {
-                        final index = space.value.toInt();
-                        if (index >= 0 && index < sortedDates.length) {
-                          return AxisLabelWidget(
-                            space: space,
-                            isLabelShown: true,
-                            label: Text(
-                              sortedDates[index].substring(5), // MM-DD
-                              style: const TextStyle(color: AppTheme.textHint, fontSize: 10),
-                            ),
-                          );
-                        }
-                        return const DummyAxisLabel();
-                      }).toList();
-                    },
+                    axisLabelWidgetFn: _makeLabelFn((v) {
+                      final index = v.toInt();
+                      return index >= 0 && index < sortedDates.length ? sortedDates[index].substring(5) : '';
+                    }),
                   ),
                   rightTitles: const AxisTitles(side: AxisSide.right),
                   topTitles: const AxisTitles(side: AxisSide.top),
@@ -230,10 +183,7 @@ class _ExerciseTrendChart extends StatelessWidget {
                     color: color,
                     barWidth: 2,
                     dotData: const FlDotData(show: false),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: color.withValues(alpha: 0.1),
-                    ),
+                    belowBarData: BarAreaData(show: true, color: color.withValues(alpha: 0.1)),
                   ),
                 ],
                 minY: 0,
@@ -249,36 +199,23 @@ class _ExerciseTrendChart extends StatelessWidget {
 class _DurationTrendChart extends StatelessWidget {
   final String exerciseName;
   final Color color;
-
-  const _DurationTrendChart({
-    required this.exerciseName,
-    required this.color,
-  });
+  const _DurationTrendChart({required this.exerciseName, required this.color});
 
   @override
   Widget build(BuildContext context) {
     final logs = context.watch<WorkoutService>().logs;
-    final exerciseLogs = logs
-        .where((log) => log.exerciseName == exerciseName)
-        .toList();
+    final exerciseLogs = logs.where((log) => log.exerciseName == exerciseName).toList();
+    if (exerciseLogs.isEmpty) return _EmptyChartCard();
 
-    if (exerciseLogs.isEmpty) {
-      return _EmptyChartCard();
-    }
-
-    // 按日期取最大值
     final Map<String, int> dailyMax = {};
     for (final log in exerciseLogs) {
       if (log.durationSeconds > (dailyMax[log.date] ?? 0)) {
         dailyMax[log.date] = log.durationSeconds;
       }
     }
-
     final sortedDates = dailyMax.keys.toList()..sort();
     final spots = sortedDates.asMap().entries.map((entry) {
-      final index = entry.key;
-      final date = entry.value;
-      return FlSpot(index.toDouble(), dailyMax[date]!.toDouble());
+      return FlSpot(entry.key.toDouble(), dailyMax[entry.value]!.toDouble());
     }).toList();
 
     return GlassCard(
@@ -286,54 +223,22 @@ class _DurationTrendChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '$exerciseName 最长时长趋势',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text('$exerciseName 最长时长趋势',
+              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
           SizedBox(
             height: 200,
             child: LineChart(
               LineChartData(
-                gridData: FlGridData(show: false),
+                gridData: const FlGridData(show: false),
                 titlesData: FlTitlesData(
-                  leftTitles: AxisTitles(
-                    side: AxisSide.left,
-                    axisLabelsProvider: (viewportSpace) {
-                      return viewportSpace.map((space) {
-                        return AxisLabelWidget(
-                          space: space,
-                          isLabelShown: true,
-                          label: Text(
-                            '${(space.value / 60).round()}秒',
-                            style: const TextStyle(color: AppTheme.textHint, fontSize: 10),
-                          ),
-                        );
-                      }).toList();
-                    },
-                  ),
+                  leftTitles: AxisTitles(side: AxisSide.left, axisLabelWidgetFn: _makeLabelFn((v) => (v / 60).round())),
                   bottomTitles: AxisTitles(
                     side: AxisSide.bottom,
-                    axisLabelsProvider: (viewportSpace) {
-                      return viewportSpace.map((space) {
-                        final index = space.value.toInt();
-                        if (index >= 0 && index < sortedDates.length) {
-                          return AxisLabelWidget(
-                            space: space,
-                            isLabelShown: true,
-                            label: Text(
-                              sortedDates[index].substring(5),
-                              style: const TextStyle(color: AppTheme.textHint, fontSize: 10),
-                            ),
-                          );
-                        }
-                        return const DummyAxisLabel();
-                      }).toList();
-                    },
+                    axisLabelWidgetFn: _makeLabelFn((v) {
+                      final index = v.toInt();
+                      return index >= 0 && index < sortedDates.length ? sortedDates[index].substring(5) : '';
+                    }),
                   ),
                   rightTitles: const AxisTitles(side: AxisSide.right),
                   topTitles: const AxisTitles(side: AxisSide.top),
@@ -346,10 +251,7 @@ class _DurationTrendChart extends StatelessWidget {
                     color: color,
                     barWidth: 2,
                     dotData: const FlDotData(show: false),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: color.withValues(alpha: 0.1),
-                    ),
+                    belowBarData: BarAreaData(show: true, color: color.withValues(alpha: 0.1)),
                   ),
                 ],
                 minY: 0,
@@ -368,28 +270,23 @@ class _CardioDurationChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logs = context.watch<WorkoutService>().logs;
-    
-    // 按周统计有氧时长
     final Map<String, int> weeklyMinutes = {};
     for (final log in logs) {
       if (log.workoutType.name == 'cardio') {
-        final weekStart = log.date.substring(0, 7); // YYYY-MM
+        final weekStart = log.date.substring(0, 7);
         final days = log.date.substring(8, 10);
         final weekKey = '$weekStart-W${(int.parse(days) ~/ 7).toString().padLeft(2, '0')}';
         weeklyMinutes[weekKey] = (weeklyMinutes[weekKey] ?? 0) + log.durationSeconds ~/ 60;
       }
     }
-
-    if (weeklyMinutes.isEmpty) {
-      return _EmptyChartCard();
-    }
+    if (weeklyMinutes.isEmpty) return _EmptyChartCard();
 
     final sortedWeeks = weeklyMinutes.keys.toList()..sort();
     final barGroups = sortedWeeks.asMap().entries.map((entry) {
-      return BarGroupData(
+      return BarChartGroupData(
         x: entry.key,
         barRods: [
-          BarRodData(
+          BarChartRodData(
             toY: weeklyMinutes[entry.value]!.toDouble(),
             color: AppTheme.primaryColor,
             width: 24,
@@ -404,14 +301,8 @@ class _CardioDurationChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '每周有氧总时长',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          const Text('每周有氧总时长',
+              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
           SizedBox(
             height: 200,
@@ -423,22 +314,10 @@ class _CardioDurationChart extends StatelessWidget {
                   leftTitles: const AxisTitles(side: AxisSide.left),
                   bottomTitles: AxisTitles(
                     side: AxisSide.bottom,
-                    axisLabelsProvider: (viewportSpace) {
-                      return viewportSpace.map((space) {
-                        final index = space.value.toInt();
-                        if (index >= 0 && index < sortedWeeks.length) {
-                          return AxisLabelWidget(
-                            space: space,
-                            isLabelShown: true,
-                            label: Text(
-                              sortedWeeks[index].substring(5),
-                              style: const TextStyle(color: AppTheme.textHint, fontSize: 10),
-                            ),
-                          );
-                        }
-                        return const DummyAxisLabel();
-                      }).toList();
-                    },
+                    axisLabelWidgetFn: _makeLabelFn((v) {
+                      final index = v.toInt();
+                      return index >= 0 && index < sortedWeeks.length ? sortedWeeks[index].substring(5) : '';
+                    }),
                   ),
                   rightTitles: const AxisTitles(side: AxisSide.right),
                   topTitles: const AxisTitles(side: AxisSide.top),
@@ -461,22 +340,19 @@ class _DailyCompletionChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final checkIns = context.watch<CheckInService>().historicalCheckIns;
-    
-    if (checkIns.isEmpty) {
-      return _EmptyChartCard();
-    }
+    if (checkIns.isEmpty) return _EmptyChartCard();
 
     final last14Days = checkIns.take(14).toList().reversed.toList();
     final barGroups = last14Days.asMap().entries.map((entry) {
-      return BarGroupData(
+      return BarChartGroupData(
         x: entry.key,
         barRods: [
-          BarRodData(
+          BarChartRodData(
             toY: entry.value.completionRate,
-            color: entry.value.completionRate >= 80 
-                ? AppTheme.successColor 
-                : entry.value.completionRate >= 50 
-                    ? AppTheme.warningColor 
+            color: entry.value.completionRate >= 80
+                ? AppTheme.successColor
+                : entry.value.completionRate >= 50
+                    ? AppTheme.warningColor
                     : AppTheme.errorColor,
             width: 20,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
@@ -490,14 +366,8 @@ class _DailyCompletionChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '近14天完成率',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          const Text('近14天完成率',
+              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
           SizedBox(
             height: 200,
@@ -509,22 +379,10 @@ class _DailyCompletionChart extends StatelessWidget {
                   leftTitles: const AxisTitles(side: AxisSide.left),
                   bottomTitles: AxisTitles(
                     side: AxisSide.bottom,
-                    axisLabelsProvider: (viewportSpace) {
-                      return viewportSpace.map((space) {
-                        final index = space.value.toInt();
-                        if (index >= 0 && index < last14Days.length) {
-                          return AxisLabelWidget(
-                            space: space,
-                            isLabelShown: true,
-                            label: Text(
-                              last14Days[index].date.substring(5),
-                              style: const TextStyle(color: AppTheme.textHint, fontSize: 10),
-                            ),
-                          );
-                        }
-                        return const DummyAxisLabel();
-                      }).toList();
-                    },
+                    axisLabelWidgetFn: _makeLabelFn((v) {
+                      final index = v.toInt();
+                      return index >= 0 && index < last14Days.length ? last14Days[index].date.substring(5) : '';
+                    }),
                   ),
                   rightTitles: const AxisTitles(side: AxisSide.right),
                   topTitles: const AxisTitles(side: AxisSide.top),
@@ -544,7 +402,6 @@ class _DailyCompletionChart extends StatelessWidget {
 
 class _EmptyChartCard extends StatelessWidget {
   const _EmptyChartCard();
-
   @override
   Widget build(BuildContext context) {
     return GlassCard(
@@ -554,35 +411,12 @@ class _EmptyChartCard extends StatelessWidget {
           children: [
             Icon(Icons.insert_chart, size: 48, color: AppTheme.textHint),
             SizedBox(height: 12),
-            Text(
-              '暂无数据',
-              style: TextStyle(color: AppTheme.textHint, fontSize: 14),
-            ),
+            Text('暂无数据', style: TextStyle(color: AppTheme.textHint, fontSize: 14)),
             SizedBox(height: 4),
-            Text(
-              '完成训练后数据将在这里展示',
-              style: TextStyle(color: AppTheme.textHint, fontSize: 12),
-            ),
+            Text('完成训练后数据将在这里展示', style: TextStyle(color: AppTheme.textHint, fontSize: 12)),
           ],
         ),
       ),
     );
   }
-}
-
-// fl_chart 需要的辅助类
-class DummyAxisLabel extends AxisLabelWidget {
-  const DummyAxisLabel() : super(space: 0, isLabelShown: false, label: Text(''));
-}
-
-class AxisLabelWidget extends AxisLabel {
-  AxisLabelWidget({
-    required double space,
-    required bool isLabelShown,
-    required Widget label,
-  }) : super(
-          space: space,
-          isLabelShown: isLabelShown,
-          label: label,
-        );
 }
