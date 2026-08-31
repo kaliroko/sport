@@ -1,7 +1,6 @@
 /// 身体测量数据仓库
 library;
 
-import 'package:metamorphosis_checkin/database/database.dart';
 import 'package:metamorphosis_checkin/models/body_measurement.dart';
 import 'package:sqflite/sqflite.dart';
 

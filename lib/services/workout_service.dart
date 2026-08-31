@@ -3,6 +3,7 @@ library;
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:metamorphosis_checkin/database/app_database.dart';
 import 'package:metamorphosis_checkin/models/workout_log.dart';
 

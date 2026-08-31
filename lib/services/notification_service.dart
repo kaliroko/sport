@@ -1,8 +1,10 @@
 /// 通知服务
 library;
 
+import 'dart:async';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -43,7 +45,7 @@ class NotificationService {
     required int id,
     required String title,
     required String body,
-    required Time time,
+    required DateTime time,
   }) async {
     const AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails(
@@ -66,13 +68,16 @@ class NotificationService {
         importance: Importance.high,
       ));
 
-    await _notifications.schedule(
+    final scheduledDate = tz.TZDateTime.from(time, tz.local);
+    await _notifications.zonedSchedule(
       id,
       title,
       body,
-      _nextInstanceOfTime(time),
+      scheduledDate,
       notificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 
@@ -99,23 +104,35 @@ class NotificationService {
         importance: Importance.high,
       ));
 
-    // 创建多个时间点
-    for (final time in [
-      Time(9, 0),
-      Time(11, 0),
-      Time(14, 0),
-      Time(16, 0),
-      Time(19, 0),
-    ]) {
-      await _notifications.schedule(
-        time.hour * 100 + time.minute,
+    final now = tz.TZDateTime.now(tz.local);
+    final times = [
+      _makeTZDateTime(now, 9, 0),
+      _makeTZDateTime(now, 11, 0),
+      _makeTZDateTime(now, 14, 0),
+      _makeTZDateTime(now, 16, 0),
+      _makeTZDateTime(now, 19, 0),
+    ];
+
+    for (var i = 0; i < times.length; i++) {
+      await _notifications.zonedSchedule(
+        hour * 100 + minute + i,
         '💧 该喝水了',
         '休息一下，喝杯水吧！',
-        _nextInstanceOfTime(time),
+        times[i],
         notificationDetails,
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
       );
     }
+  }
+
+  static tz.TZDateTime _makeTZDateTime(tz.TZDateTime now, int hour, int minute) {
+    var dt = tz.TZDateTime(now.timeZoneLocation, now.year, now.month, now.day, hour, minute, 0);
+    if (dt.isBefore(now)) {
+      dt = dt.add(const Duration(days: 1));
+    }
+    return dt;
   }
 
   /// 安排体态提醒（每45分钟）
@@ -141,17 +158,21 @@ class NotificationService {
         importance: Importance.high,
       ));
 
-    // 工作日每隔45分钟提醒一次
+    final now = tz.TZDateTime.now(tz.local);
+    var id = 1000;
     for (int hour = 8; hour <= 21; hour++) {
       for (int minute in [0, 45]) {
-        if (hour == 21 && minute == 45) continue; // 避免超过21点
-        await _notifications.schedule(
-          hour * 100 + minute,
+        if (hour == 21 && minute == 45) continue;
+        final scheduledDate = _makeTZDateTime(now, hour, minute);
+        await _notifications.zonedSchedule(
+          id++,
           '🧍 体态提醒',
           '抬头挺胸，手机举高！',
-          _nextInstanceOfTime(Time(hour, minute)),
+          scheduledDate,
           notificationDetails,
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
         );
       }
     }
@@ -162,22 +183,4 @@ class NotificationService {
     await _notifications.cancelAll();
   }
 
-  /// 获取下次指定时间的DateTime
-  DateTime _nextInstanceOfTime(Time time) {
-    final now = DateTime.now();
-    var next = DateTime(
-      now.year,
-      now.month,
-      now.day,
-      time.hour,
-      time.minute,
-    );
-
-    // 如果今天的时间已经过去，设置为明天
-    if (next.isBefore(now)) {
-      next = next.add(const Duration(days: 1));
-    }
-
-    return next;
-  }
 }

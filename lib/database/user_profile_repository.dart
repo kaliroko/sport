@@ -1,7 +1,6 @@
 /// 用户资料数据仓库
 library;
 
-import 'package:metamorphosis_checkin/database/database.dart';
 import 'package:metamorphosis_checkin/models/user_profile.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -31,9 +30,9 @@ class UserProfileRepository {
 
   /// 检查是否已有用户资料
   Future<bool> hasProfile() async {
-    final count = await _db.rawSelect(
-      'SELECT COUNT(*) FROM user_profiles',
+    final List<Map<String, dynamic>> result = await _db.rawQuery(
+      'SELECT COUNT(*) as count FROM user_profiles',
     );
-    return (count.first['COUNT(*)'] as int) > 0;
+    return (result.first['count'] as int) > 0;
   }
 }
