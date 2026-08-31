@@ -1,0 +1,75 @@
+# Static analysis
+*.dex
+*.class
+*.jar
+*.apk
+
+# Flutter/Dart/Pub
+.dart_tool/
+.build/
+.packages
+pubspec.lock
+pubspec_overrides.yaml
+**/generated_plugin_registrant.dart
+**/flutter_gen/
+
+# Android
+android/.idea/
+android/.gradle
+android/build
+android/app/src/main/java/
+android/app/src/main/kotlin
+android/app/src/main/jniLibs
+android/app/src/main/assets
+
+# iOS
+ios/Pods
+ios/.symlinks
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/Generated.xcodeproj
+
+# macOS
+macos/Pods
+macos/.symlinks
+macos/Flutter/Generated.xcconfig
+macos/Flutter/flutter_export_environment.sh
+
+# Linux
+linux/flutter/ephemeral/
+
+# Web
+web/.dart_tool/
+web/build/
+
+# Coverage
+coverage/
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+Thumbs.db
+
+# Build outputs
+build/
+**/build/
+
+# Temp files
+*.tmp
+*.temp
+
+# Local properties (CI generates this)
+android/local.properties
