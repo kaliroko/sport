@@ -114,7 +114,7 @@ class _CompletionHeatmapWidget extends StatelessWidget {
 }
 
 // fl_chart 0.65+ 辅助函数
-Widget _makeTitleWidget(String Function(double) builder) {
+GetTitleWidgetFunction _makeTitleWidget(String Function(double) builder) {
   return (double value, TitleMeta meta) => Text(
     builder(value),
     style: const TextStyle(color: AppTheme.textHint, fontSize: 10),

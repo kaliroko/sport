@@ -128,7 +128,7 @@ class NotificationService {
   }
 
   static tz.TZDateTime _makeTZDateTime(tz.TZDateTime now, int hour, int minute) {
-    var dt = tz.TZDateTime(now.timeZoneLocation, now.year, now.month, now.day, hour, minute, 0);
+    var dt = tz.TZDateTime(now.location, now.year, now.month, now.day, hour, minute, 0);
     if (dt.isBefore(now)) {
       dt = dt.add(const Duration(days: 1));
     }
