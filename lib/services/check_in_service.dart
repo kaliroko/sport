@@ -156,5 +156,6 @@ class CheckInService with ChangeNotifier {
   void dispose() {
     _completionRateStream.close();
     _streakStream.close();
+    super.dispose();
   }
 }

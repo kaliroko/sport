@@ -46,7 +46,7 @@ class MetamorphosisApp extends StatelessWidget {
 }
 
 class _AppInitializer extends StatelessWidget {
-  const _AppInitializer({super.key});
+  const _AppInitializer();
 
   @override
   Widget build(BuildContext context) {

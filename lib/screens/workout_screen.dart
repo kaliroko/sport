@@ -36,7 +36,6 @@ class _WorkoutScreenContentState extends State<_WorkoutScreenContent> with Ticke
   bool _isTimerActive = false;
   int _timerSeconds = 0;
   late AnimationController _timerController;
-  late Animation<double> _timerAnimation;
 
   @override
   void initState() {
@@ -45,7 +44,6 @@ class _WorkoutScreenContentState extends State<_WorkoutScreenContent> with Ticke
       vsync: this,
       duration: const Duration(seconds: 1),
     );
-    _timerAnimation = Tween<double>(begin: 0, end: 1).animate(_timerController);
   }
 
   @override
@@ -56,7 +54,6 @@ class _WorkoutScreenContentState extends State<_WorkoutScreenContent> with Ticke
 
   /// 获取今日训练类型
   String getTodayWorkoutType() {
-    final week = context.read<UserProfileService>().profile?.currentWeek ?? 1;
     final dayOfWeek = DateTime.now().weekday;
     
     if (dayOfWeek == 1 || dayOfWeek == 3 || dayOfWeek == 5) {
@@ -72,7 +69,6 @@ class _WorkoutScreenContentState extends State<_WorkoutScreenContent> with Ticke
 
   /// 获取今日训练动作
   List<MovementConfig> getTodayMovements() {
-    final week = context.read<UserProfileService>().profile?.currentWeek ?? 1;
     return AppConstants.strengthMovements;
   }
 

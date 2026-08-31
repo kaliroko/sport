@@ -515,7 +515,6 @@ class _DebugPanelDialog extends StatefulWidget {
 
 class _DebugPanelDialogState extends State<_DebugPanelDialog> {
   final _urlController = TextEditingController();
-  bool _isLoading = false;
 
   @override
   void initState() {
