@@ -31,7 +31,7 @@ class _ProfileScreenContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AdaptiveLiquidGlassLayer(
-      settings: RecommendedGlassSettings.standard,
+      settings: const LiquidGlassSettings(),
       quality: GlassQuality.standard,
       blendAmount: 10.0,
       child: CustomScrollView(
@@ -306,7 +306,7 @@ class _SettingsSection extends StatelessWidget {
           ),
           const Divider(color: AppTheme.textHint),
           _SettingsItem(
-            icon: Icons.stage,
+            icon: Icons.tune,
             title: '选择阶段',
             onTap: () {},
           ),

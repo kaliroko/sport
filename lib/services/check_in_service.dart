@@ -9,11 +9,13 @@ import 'package:rxdart/rxdart.dart';
 
 class CheckInService with ChangeNotifier {
   DailyCheckIn? _todayCheckIn;
+  List<DailyCheckIn> _historicalCheckIns = [];
   final BehaviorSubject<double> _completionRateStream = BehaviorSubject<double>();
   final StreamController<int> _streakStream = StreamController<int>();
 
   // Getters
   DailyCheckIn? get todayCheckIn => _todayCheckIn;
+  List<DailyCheckIn> get historicalCheckIns => _historicalCheckIns;
   Stream<double> get completionRateStream => _completionRateStream.stream;
   Stream<int> get streakStream => _streakStream.stream;
 
@@ -22,6 +24,8 @@ class CheckInService with ChangeNotifier {
   /// 初始化服务
   Future<void> init() async {
     await _loadTodayCheckIn();
+    _historicalCheckIns = await getHistoricalCheckIns(days: 90);
+    _notifyChange();
   }
 
   /// 加载今日打卡记录

@@ -3,6 +3,7 @@ library;
 
 import 'package:metamorphosis_checkin/database/database.dart';
 import 'package:metamorphosis_checkin/models/user_profile.dart';
+import 'package:sqflite/sqflite.dart';
 
 class UserProfileRepository {
   final Database _db;

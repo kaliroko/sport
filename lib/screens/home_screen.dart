@@ -77,7 +77,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
     return Stack(
       children: [
         AdaptiveLiquidGlassLayer(
-          settings: RecommendedGlassSettings.standard,
+          settings: const LiquidGlassSettings(),
           quality: GlassQuality.standard,
           blendAmount: 10.0,
           child: CustomScrollView(
