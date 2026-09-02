@@ -1,30 +1,18 @@
 pluginManagement {
-    // 优先从环境变量读取 Flutter SDK 路径（CI 环境使用）
-    val flutterSdkPath = run {
-        val envFlutterSdk = System.getenv("FLUTTER_ROOT")
-        if (envFlutterSdk != null) {
-            envFlutterSdk
-        } else {
-            val properties = java.util.Properties()
-            file("local.properties").inputStream().use { properties.load(it) }
-            val localFlutterSdk = properties.getProperty("flutter.sdk")
-            check(localFlutterSdk != null) { "Flutter SDK not found. Set FLUTTER_ROOT env or define flutter.sdk in local.properties." }
-            localFlutterSdk
-        }
-    }
+    def flutterSdkPath = {
+        def properties = new Properties()
+        file("local.properties").withInputStream { properties.load(it) }
+        def flutterSdk = properties.getProperty("flutter.sdk")
+        assert flutterSdk != null : "Flutter SDK not found. Define flutter.sdk in local.properties."
+        return flutterSdk
+    }()
+
+    includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
 
     repositories {
         google()
         mavenCentral()
         gradlePluginPortal()
-        // Flutter SDK 内置的 Gradle 插件
-        maven {
-            url = uri("$flutterSdkPath/packages/flutter_tools/gradle")
-        }
-    }
-
-    plugins {
-        id("dev.flutter.flutter-gradle-plugin") version "1.0.0" apply false
     }
 }
 
