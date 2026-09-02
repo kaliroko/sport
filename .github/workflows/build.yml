@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [main, master]
 
-permissions:
-  contents: write
-
 env:
   FLUTTER_VERSION: '3.47.2'
   JAVA_VERSION: '17'
