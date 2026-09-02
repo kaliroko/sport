@@ -55,5 +55,5 @@ flutter {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:${extra["kotlinVersion"]}")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:${extra["kotlinVersion"]}")
 }

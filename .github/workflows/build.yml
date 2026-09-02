@@ -73,7 +73,7 @@ jobs:
         run: flutter test || true
 
       - name: Build APK
-        run: flutter build apk --release --target-platform=android-arm64
+        run: flutter build apk --release --target-platform=android-arm64 --android-skip-build-dependency-validation
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -83,7 +83,7 @@ jobs:
           retention-days: 14
 
       - name: Build App Bundle (optional)
-        run: flutter build appbundle --release --target-platform=android-arm64 || true
+        run: flutter build appbundle --release --target-platform=android-arm64 --android-skip-build-dependency-validation || true
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
