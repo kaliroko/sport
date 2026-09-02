@@ -5,9 +5,9 @@ plugins {
 
 val kotlinVersion by extra("1.9.10")
 
-rootProject.buildDir = "../build"
+rootProject.buildDir = file("../build")
 subprojects {
-    project.buildDir = "${rootProject.buildDir}/${project.name}"
+    project.buildDir = file("${rootProject.buildDir}/${project.name}")
 }
 subprojects {
     project.evaluationDependsOn(":app")
