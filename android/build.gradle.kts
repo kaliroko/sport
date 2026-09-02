@@ -1,13 +1,10 @@
 plugins {
-    id "com.android.application" version "8.1.0" apply false
-    id "org.jetbrains.kotlin.android" version "1.9.10" apply false
+    id("com.android.application") version "8.1.0" apply false
+    id("org.jetbrains.kotlin.android") version "1.9.10" apply false
+    id("dev.flutter.flutter-gradle-plugin") version "1.0.0" apply false
 }
 
-buildscript {
-    ext {
-        kotlin_version = '1.9.10'
-    }
-}
+val kotlinVersion by extra("1.9.10")
 
 rootProject.buildDir = "../build"
 subprojects {
@@ -17,6 +14,6 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
-tasks.register("clean", Delete) {
-    delete rootProject.buildDir
+tasks.register("clean", Delete::class) {
+    delete(rootProject.buildDir)
 }

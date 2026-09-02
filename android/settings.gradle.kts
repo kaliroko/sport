@@ -13,14 +13,18 @@ pluginManagement {
         }
     }
 
-    plugins {
-        id("dev.flutter.flutter-gradle-plugin") version "1.0.0" apply false
-    }
-
     repositories {
         google()
         mavenCentral()
         gradlePluginPortal()
+        // Flutter SDK 内置的 Gradle 插件
+        maven {
+            url = uri("$flutterSdkPath/packages/flutter_tools/gradle")
+        }
+    }
+
+    plugins {
+        id("dev.flutter.flutter-gradle-plugin") version "1.0.0" apply false
     }
 }
 
