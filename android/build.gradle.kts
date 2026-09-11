@@ -1,9 +1,7 @@
 plugins {
     id("com.android.application") version "9.0.1" apply false
-    id("org.jetbrains.kotlin.android") version "2.2.20" apply false
+    id("dev.flutter.flutter-gradle-plugin")
 }
-
-val kotlinVersion by extra("2.2.20")
 
 rootProject.buildDir = file("../build")
 subprojects {
