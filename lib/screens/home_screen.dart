@@ -6,6 +6,7 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:metamorphosis_checkin/services/check_in_service.dart';
 import 'package:metamorphosis_checkin/utils/constants.dart';
+import 'package:metamorphosis_checkin/utils/md3_spring_curve.dart';
 import 'package:metamorphosis_checkin/widgets/task_card.dart';
 import 'package:metamorphosis_checkin/widgets/progress_ring.dart';
 import 'package:metamorphosis_checkin/widgets/stat_card.dart';
@@ -46,7 +47,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
     );
     _checkAnimation = CurvedAnimation(
       parent: _checkController,
-      curve: Curves.easeOutBack,
+      curve: const Md3StandardSpring(),
     );
   }
 
