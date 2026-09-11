@@ -18,7 +18,6 @@ android/.idea/
 android/.gradle
 android/build
 android/app/src/main/java/
-android/app/src/main/kotlin
 android/app/src/main/jniLibs
 android/app/src/main/assets
 
