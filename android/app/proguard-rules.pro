@@ -2,6 +2,9 @@
 # Flutter 引擎相关类必须保留，否则 App 崩溃
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.** { *; }
+# FlutterApplication 由 Manifest 引用，R8 可能误判为未使用，强制保留
+-keep class io.flutter.embedding.android.FlutterApplication { *; }
+-keep class io.flutter.embedding.android.FlutterPlayStoreSplitApplication { *; }
 
 # MainActivity 必须保留
 -keep class com.metamorphosis.checkin.MainActivity { *; }
