@@ -9,6 +9,7 @@ import 'package:metamorphosis_checkin/services/check_in_service.dart';
 import 'package:metamorphosis_checkin/services/workout_service.dart';
 import 'package:metamorphosis_checkin/widgets/completion_heatmap.dart';
 import 'package:metamorphosis_checkin/theme/app_theme.dart';
+import 'package:metamorphosis_checkin/utils/responsive_utils.dart';
 
 class StatsScreen extends StatelessWidget {
   const StatsScreen({super.key});
@@ -40,12 +41,12 @@ class _StatsScreenContent extends StatelessWidget {
             child: SafeArea(
               bottom: false,
               child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: const Text(
+                padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 20)),
+                child: Text(
                   '运动记录',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 28,
+                    fontSize: ResponsiveUtils.scaleFont(context, 28),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -53,14 +54,14 @@ class _StatsScreenContent extends StatelessWidget {
             ),
           ),
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: ResponsiveUtils.scaleHorizontalEdgeInsets(context, 20),
             sliver: SliverToBoxAdapter(
               child: const _CompletionHeatmapWidget(),
             ),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          SliverToBoxAdapter(child: SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16))),
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: ResponsiveUtils.scaleHorizontalEdgeInsets(context, 20),
             sliver: SliverToBoxAdapter(
               child: const _ExerciseTrendChart(
                 exerciseName: '标准俯卧撑',
@@ -68,9 +69,9 @@ class _StatsScreenContent extends StatelessWidget {
               ),
             ),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          SliverToBoxAdapter(child: SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16))),
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: ResponsiveUtils.scaleHorizontalEdgeInsets(context, 20),
             sliver: SliverToBoxAdapter(
               child: const _DurationTrendChart(
                 exerciseName: '平板支撑',
@@ -78,21 +79,21 @@ class _StatsScreenContent extends StatelessWidget {
               ),
             ),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          SliverToBoxAdapter(child: SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16))),
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: ResponsiveUtils.scaleHorizontalEdgeInsets(context, 20),
             sliver: SliverToBoxAdapter(
               child: const _CardioDurationChart(),
             ),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          SliverToBoxAdapter(child: SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16))),
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: ResponsiveUtils.scaleHorizontalEdgeInsets(context, 20),
             sliver: SliverToBoxAdapter(
               child: const _DailyCompletionChart(),
             ),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+          SliverToBoxAdapter(child: SizedBox(height: ResponsiveUtils.scaleBottomPadding(context))),
         ],
       ),
     );
@@ -114,10 +115,10 @@ class _CompletionHeatmapWidget extends StatelessWidget {
 }
 
 // fl_chart 0.65+ 辅助函数
-GetTitleWidgetFunction _makeTitleWidget(String Function(double) builder) {
+GetTitleWidgetFunction _makeTitleWidget(String Function(double) builder, BuildContext context) {
   return (double value, TitleMeta meta) => Text(
     builder(value),
-    style: const TextStyle(color: AppTheme.textHint, fontSize: 10),
+    style: TextStyle(color: AppTheme.textHint, fontSize: ResponsiveUtils.scaleFont(context, 10)),
   );
 }
 
@@ -143,15 +144,15 @@ class _ExerciseTrendChart extends StatelessWidget {
     }).toList();
 
     return GlassCard(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('$exerciseName 总次数趋势',
-              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 16),
+              style: TextStyle(color: Colors.white, fontSize: ResponsiveUtils.scaleFont(context, 16), fontWeight: FontWeight.bold)),
+          SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16)),
           SizedBox(
-            height: 200,
+            height: ResponsiveUtils.scaleChartHeight(context, 200),
             child: LineChart(
               LineChartData(
                 gridData: const FlGridData(show: false),
@@ -161,6 +162,7 @@ class _ExerciseTrendChart extends StatelessWidget {
                       showTitles: true,
                       reservedSize: 44,
                       getTitlesWidget: _makeTitleWidget((v) => (v / 5).toStringAsFixed(0)),
+                      context,
                     ),
                   ),
                   bottomTitles: AxisTitles(
@@ -170,7 +172,7 @@ class _ExerciseTrendChart extends StatelessWidget {
                       getTitlesWidget: _makeTitleWidget((v) {
                         final index = v.toInt();
                         return index >= 0 && index < sortedDates.length ? sortedDates[index].substring(5) : '';
-                      }),
+                      }, context),
                     ),
                   ),
                   rightTitles: const AxisTitles(),
@@ -220,15 +222,15 @@ class _DurationTrendChart extends StatelessWidget {
     }).toList();
 
     return GlassCard(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('$exerciseName 最长时长趋势',
-              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 16),
+              style: TextStyle(color: Colors.white, fontSize: ResponsiveUtils.scaleFont(context, 16), fontWeight: FontWeight.bold)),
+          SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16)),
           SizedBox(
-            height: 200,
+            height: ResponsiveUtils.scaleChartHeight(context, 200),
             child: LineChart(
               LineChartData(
                 gridData: const FlGridData(show: false),
@@ -238,6 +240,7 @@ class _DurationTrendChart extends StatelessWidget {
                       showTitles: true,
                       reservedSize: 44,
                       getTitlesWidget: _makeTitleWidget((v) => (v / 60).round().toString()),
+                      context,
                     ),
                   ),
                   bottomTitles: AxisTitles(
@@ -247,7 +250,7 @@ class _DurationTrendChart extends StatelessWidget {
                       getTitlesWidget: _makeTitleWidget((v) {
                         final index = v.toInt();
                         return index >= 0 && index < sortedDates.length ? sortedDates[index].substring(5) : '';
-                      }),
+                      }, context),
                     ),
                   ),
                   rightTitles: const AxisTitles(),
@@ -307,15 +310,15 @@ class _CardioDurationChart extends StatelessWidget {
     }).toList();
 
     return GlassCard(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('每周有氧总时长',
-              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 16),
+          Text('每周有氧总时长',
+              style: TextStyle(color: Colors.white, fontSize: ResponsiveUtils.scaleFont(context, 16), fontWeight: FontWeight.bold)),
+          SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16)),
           SizedBox(
-            height: 200,
+            height: ResponsiveUtils.scaleChartHeight(context, 200),
             child: BarChart(
               BarChartData(
                 alignment: BarChartAlignment.spaceAround,
@@ -329,7 +332,7 @@ class _CardioDurationChart extends StatelessWidget {
                       getTitlesWidget: _makeTitleWidget((v) {
                         final index = v.toInt();
                         return index >= 0 && index < sortedWeeks.length ? sortedWeeks[index].substring(5) : '';
-                      }),
+                      }, context),
                     ),
                   ),
                   rightTitles: const AxisTitles(),
@@ -375,15 +378,15 @@ class _DailyCompletionChart extends StatelessWidget {
     }).toList();
 
     return GlassCard(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('近14天完成率',
-              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 16),
+          Text('近14天完成率',
+              style: TextStyle(color: Colors.white, fontSize: ResponsiveUtils.scaleFont(context, 16), fontWeight: FontWeight.bold)),
+          SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16)),
           SizedBox(
-            height: 200,
+            height: ResponsiveUtils.scaleChartHeight(context, 200),
             child: BarChart(
               BarChartData(
                 alignment: BarChartAlignment.spaceAround,
@@ -397,7 +400,7 @@ class _DailyCompletionChart extends StatelessWidget {
                       getTitlesWidget: _makeTitleWidget((v) {
                         final index = v.toInt();
                         return index >= 0 && index < last14Days.length ? last14Days[index].date.substring(5) : '';
-                      }),
+                      }, context),
                     ),
                   ),
                   rightTitles: const AxisTitles(),
@@ -421,15 +424,15 @@ class _EmptyChartCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassCard(
-      padding: const EdgeInsets.all(24),
-      child: const Center(
+      padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 24)),
+      child: Center(
         child: Column(
           children: [
-            Icon(Icons.insert_chart, size: 48, color: AppTheme.textHint),
-            SizedBox(height: 12),
-            Text('暂无数据', style: TextStyle(color: AppTheme.textHint, fontSize: 14)),
+            Icon(Icons.insert_chart, size: ResponsiveUtils.scaleIcon(context, 48), color: AppTheme.textHint),
+            SizedBox(height: ResponsiveUtils.scaleSpacing(context, 12)),
+            Text('暂无数据', style: TextStyle(color: AppTheme.textHint, fontSize: ResponsiveUtils.scaleFont(context, 14))),
             SizedBox(height: 4),
-            Text('完成训练后数据将在这里展示', style: TextStyle(color: AppTheme.textHint, fontSize: 12)),
+            Text('完成训练后数据将在这里展示', style: TextStyle(color: AppTheme.textHint, fontSize: ResponsiveUtils.scaleFont(context, 12))),
           ],
         ),
       ),

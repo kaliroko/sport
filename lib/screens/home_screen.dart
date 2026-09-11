@@ -10,6 +10,7 @@ import 'package:metamorphosis_checkin/widgets/task_card.dart';
 import 'package:metamorphosis_checkin/widgets/progress_ring.dart';
 import 'package:metamorphosis_checkin/widgets/stat_card.dart';
 import 'package:metamorphosis_checkin/theme/app_theme.dart';
+import 'package:metamorphosis_checkin/utils/responsive_utils.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -87,7 +88,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                 child: SafeArea(
                   bottom: false,
                   child: Padding(
-                    padding: const EdgeInsets.all(20),
+                    padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 20)),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -97,14 +98,14 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                           children: [
                             Text(
                               dateStr,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppTheme.textSecondary,
-                                fontSize: 14,
+                                fontSize: ResponsiveUtils.scaleFont(context, 14),
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: ResponsiveUtils.scalePadding(context, 12),
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
@@ -113,36 +114,36 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                               ),
                               child: Text(
                                 '周$weekday',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppTheme.primaryColor,
-                                  fontSize: 12,
+                                  fontSize: ResponsiveUtils.scaleFont(context, 12),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
 
                         // 欢迎语
-                        const Text(
+                        Text(
                           '今天也要加油哦！💪',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 28,
+                            fontSize: ResponsiveUtils.scaleFont(context, 28),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         Text(
                           isAllComplete ? '太棒了！今日目标全部达成 🎉' : '坚持就是胜利，你已经很棒了！',
                           style: TextStyle(
                             color: isAllComplete ? AppTheme.successColor : AppTheme.textSecondary,
-                            fontSize: 14,
+                            fontSize: ResponsiveUtils.scaleFont(context, 14),
                             fontWeight: isAllComplete ? FontWeight.w600 : FontWeight.normal,
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        SizedBox(height: ResponsiveUtils.scaleSpacing(context, 24)),
 
                         // 统计卡片行
                         Row(
@@ -156,7 +157,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                                 subtitle: '最佳记录: ${service.getBestStreak()}天',
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            SizedBox(width: ResponsiveUtils.scaleSpacing(context, 12)),
                             Expanded(
                               child: StatCard(
                                 title: '今日完成',
@@ -168,7 +169,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                             ),
                           ],
                         ),
-                        const SizedBox(height: 20),
+                        SizedBox(height: ResponsiveUtils.scaleSpacing(context, 20)),
 
                         // 完成率环形图
                         Center(
@@ -178,39 +179,43 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                                 scale: _checkAnimation,
                                 child: ProgressRing(
                                   progress: service.completionRate,
-                                  size: 120,
-                                  strokeWidth: 10,
+                                  size: ResponsiveUtils.scaleFont(context, 120),
+                                  strokeWidth: ResponsiveUtils.scaleFont(context, 10),
                                   foregroundColor: isAllComplete
                                       ? AppTheme.successColor
                                       : AppTheme.primaryColor,
                                   labelText: '${service.completionRate.round()}%',
                                 ),
                               ),
-                              const SizedBox(height: 8),
+                              SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
                               Text(
                                 '今日完成率',
                                 style: TextStyle(
                                   color: AppTheme.textSecondary,
-                                  fontSize: 12,
+                                  fontSize: ResponsiveUtils.scaleFont(context, 12),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        SizedBox(height: ResponsiveUtils.scaleSpacing(context, 20)),
 
                         // 一键打卡按钮
                         if (!isAllComplete)
                           GlassButton.custom(
                             onTap: () => _completeAllCheckIn(service),
                             width: double.infinity,
-                            height: 52,
-                            child: const Text(
+                            height: ResponsiveUtils.scaleButtonHeight(context, 52),
+                            child: Text(
                               '✨ 一键完成今日打卡',
-                              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: ResponsiveUtils.scaleFont(context, 16),
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
-                        const SizedBox(height: 24),
+                        SizedBox(height: ResponsiveUtils.scaleSpacing(context, 24)),
                       ],
                     ),
                   ),
@@ -219,7 +224,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
 
               // 任务列表
               SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: ResponsiveUtils.scaleHorizontalEdgeInsets(context, 20),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
@@ -227,13 +232,12 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                       final isChecked = _isTaskChecked(service, task.id);
 
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
+                        padding: EdgeInsets.only(bottom: ResponsiveUtils.scaleSpacing(context, 12)),
                         child: TaskCard(
                           task: task,
                           isChecked: isChecked,
                           onToggle: () {
                             service.toggleTask(task.id, !isChecked);
-                            // 检查是否全部完成
                             if (!isChecked) {
                               final remaining = tasks
                                   .where((t) => !_isTaskChecked(service, t.id))
@@ -254,8 +258,8 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                   ),
                 ),
               ),
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 120),
+              SliverToBoxAdapter(
+                child: SizedBox(height: ResponsiveUtils.scaleBottomPadding(context)),
               ),
             ],
           ),
@@ -273,30 +277,30 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                     return Transform.scale(
                       scale: _checkAnimation.value,
                       child: GlassCard(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 40,
-                          vertical: 32,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: ResponsiveUtils.scalePadding(context, 40),
+                          vertical: ResponsiveUtils.scalePadding(context, 32),
                         ),
-                        child: const Column(
+                        child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text('🎉', style: TextStyle(fontSize: 64)),
-                            SizedBox(height: 16),
+                            Text('🎉', style: TextStyle(fontSize: ResponsiveUtils.scaleFont(context, 64))),
+                            SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16)),
                             Text(
                               '今日打卡完成！',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 24,
+                                fontSize: ResponsiveUtils.scaleFont(context, 24),
                                 fontWeight: FontWeight.bold,
                               ),
                               textAlign: TextAlign.center,
                             ),
-                            SizedBox(height: 8),
+                            SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
                             Text(
                               '你太棒了，明天继续！',
                               style: TextStyle(
                                 color: AppTheme.textSecondary,
-                                fontSize: 14,
+                                fontSize: ResponsiveUtils.scaleFont(context, 14),
                               ),
                               textAlign: TextAlign.center,
                             ),
