@@ -21,10 +21,17 @@ class NotificationService {
     const InitializationSettings initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
 
-    await _notifications.initialize(initializationSettings);
+    await _notifications.initialize(
+      settings: initializationSettings,
+      onDidReceiveNotificationResponse: _onNotificationResponse,
+    );
 
     // 请求通知权限
     await _requestPermissions();
+  }
+
+  void _onNotificationResponse(NotificationResponse response) {
+    // TODO: 处理通知点击事件
   }
 
   Future<void> _requestPermissions() async {
@@ -70,14 +77,12 @@ class NotificationService {
 
     final scheduledDate = tz.TZDateTime.from(time, tz.local);
     await _notifications.zonedSchedule(
-      id,
-      title,
-      body,
-      scheduledDate,
-      notificationDetails,
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: scheduledDate,
+      notificationDetails: notificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 
@@ -115,14 +120,12 @@ class NotificationService {
 
     for (var i = 0; i < times.length; i++) {
       await _notifications.zonedSchedule(
-        hour * 100 + minute + i,
-        '💧 该喝水了',
-        '休息一下，喝杯水吧！',
-        times[i],
-        notificationDetails,
+        id: hour * 100 + minute + i,
+        title: '💧 该喝水了',
+        body: '休息一下，喝杯水吧！',
+        scheduledDate: times[i],
+        notificationDetails: notificationDetails,
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
       );
     }
   }
@@ -165,14 +168,12 @@ class NotificationService {
         if (hour == 21 && minute == 45) continue;
         final scheduledDate = _makeTZDateTime(now, hour, minute);
         await _notifications.zonedSchedule(
-          id++,
-          '🧍 体态提醒',
-          '抬头挺胸，手机举高！',
-          scheduledDate,
-          notificationDetails,
+          id: id++,
+          title: '🧍 体态提醒',
+          body: '抬头挺胸，手机举高！',
+          scheduledDate: scheduledDate,
+          notificationDetails: notificationDetails,
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
         );
       }
     }
