@@ -64,7 +64,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Scaffold(
         backgroundColor: AppTheme.backgroundColor,
         body: SafeArea(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 24)),
             child: Form(
               key: _formKey,
