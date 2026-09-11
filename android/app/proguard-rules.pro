@@ -35,3 +35,11 @@
 # ==================== 泛型信息保留（运行时反射用到） ====================
 -keepattributes Signature, InnerClasses, EnclosingMethod
 -keepattributes *Annotation*, SourceFile, LineNumberTable
+
+# ==================== R8 混淆忽略规则 ====================
+# 以下缺失类来自 Google Play Core，项目不使用 Split Install 功能，直接忽略
+-dontwarn com.google.android.play.core.splitcompat.**
+-dontwarn com.google.android.play.core.splitinstall.**
+-dontwarn com.google.android.play.core.tasks.**
+# Flutter DeferredComponents 在 Release 构建中不会触发，忽略相关警告
+-dontwarn io.flutter.embedding.engine.deferredcomponents.**
