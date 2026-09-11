@@ -67,19 +67,19 @@ class Md3SpringCurve extends Curve {
 /// 对应 MD3 Tonal Button press 弹簧效果
 class Md3LightSpring extends Md3SpringCurve {
   const Md3LightSpring()
-      : super(stiffness = 250.0, damping = 8.0, mass = 0.8);
+      : super(stiffness: 250.0, damping: 8.0, mass: 0.8);
 }
 
 /// 标准弹簧曲线（适中阻尼，轻微过冲，适合页面转场）
 /// 对应 MD3 Standard Easing 的弹簧近似
 class Md3StandardSpring extends Md3SpringCurve {
   const Md3StandardSpring()
-      : super(stiffness = 180.0, damping = 10.0, mass = 1.0);
+      : super(stiffness: 180.0, damping: 10.0, mass: 1.0);
 }
 
 /// 重弹簧曲线（高阻尼，较少过冲，适合大型组件动画）
 /// 对应 MD3 Large Component 弹簧效果
 class Md3HeavySpring extends Md3SpringCurve {
   const Md3HeavySpring()
-      : super(stiffness = 120.0, damping = 12.0, mass = 1.5);
+      : super(stiffness: 120.0, damping: 12.0, mass: 1.5);
 }
