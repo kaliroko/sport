@@ -161,8 +161,7 @@ class _ExerciseTrendChart extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 44,
-                      getTitlesWidget: _makeTitleWidget((v) => (v / 5).toStringAsFixed(0)),
-                      context,
+                      getTitlesWidget: _makeTitleWidget((v) => (v / 5).toStringAsFixed(0), context),
                     ),
                   ),
                   bottomTitles: AxisTitles(
@@ -239,8 +238,7 @@ class _DurationTrendChart extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 44,
-                      getTitlesWidget: _makeTitleWidget((v) => (v / 60).round().toString()),
-                      context,
+                      getTitlesWidget: _makeTitleWidget((v) => (v / 60).round().toString(), context),
                     ),
                   ),
                   bottomTitles: AxisTitles(
