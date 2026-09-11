@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:metamorphosis_checkin/services/user_profile_service.dart';
 import 'package:metamorphosis_checkin/theme/app_theme.dart';
 import 'package:metamorphosis_checkin/models/user_profile.dart';
+import 'package:metamorphosis_checkin/utils/responsive_utils.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -64,7 +65,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         backgroundColor: AppTheme.backgroundColor,
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 24)),
             child: Form(
               key: _formKey,
               child: Column(
@@ -73,52 +74,55 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   // Logo
                   Center(
                     child: Container(
-                      width: 100,
-                      height: 100,
+                      width: ResponsiveUtils.scaleFont(context, 100),
+                      height: ResponsiveUtils.scaleFont(context, 100),
                       decoration: BoxDecoration(
                         color: AppTheme.primaryColor.withValues(alpha: 0.3),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.fitness_center,
-                        size: 50,
+                        size: ResponsiveUtils.scaleIcon(context, 50),
                         color: Colors.white,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  const Center(
+                  SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16)),
+                  Center(
                     child: Text(
                       '自律',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 32,
+                        fontSize: ResponsiveUtils.scaleFont(context, 32),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-                  const Center(
+                  Center(
                     child: Text(
                       '自律养成计划',
                       style: TextStyle(
                         color: AppTheme.textSecondary,
-                        fontSize: 14,
+                        fontSize: ResponsiveUtils.scaleFont(context, 14),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 40),
+                  SizedBox(height: ResponsiveUtils.scaleSpacing(context, 40)),
 
                   // 姓名
-                  const Text(
+                  Text(
                     '你的名字',
                     style: TextStyle(
                       color: AppTheme.textSecondary,
-                      fontSize: 14,
+                      fontSize: ResponsiveUtils.scaleFont(context, 14),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
                   GlassCard(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: ResponsiveUtils.scalePadding(context, 16),
+                      vertical: ResponsiveUtils.scalePadding(context, 12),
+                    ),
                     child: TextFormField(
                       controller: _nameController,
                       style: const TextStyle(color: Colors.white),
@@ -129,7 +133,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: ResponsiveUtils.scaleSpacing(context, 20)),
 
                   // 年龄和身高
                   Row(
@@ -138,18 +142,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               '年龄',
                               style: TextStyle(
                                 color: AppTheme.textSecondary,
-                                fontSize: 14,
+                                fontSize: ResponsiveUtils.scaleFont(context, 14),
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
                             GlassCard(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: ResponsiveUtils.scalePadding(context, 16),
+                                vertical: ResponsiveUtils.scalePadding(context, 12),
                               ),
                               child: TextFormField(
                                 controller: _ageController,
@@ -166,23 +170,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      SizedBox(width: ResponsiveUtils.scaleSpacing(context, 16)),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               '身高',
                               style: TextStyle(
                                 color: AppTheme.textSecondary,
-                                fontSize: 14,
+                                fontSize: ResponsiveUtils.scaleFont(context, 14),
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
                             GlassCard(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: ResponsiveUtils.scalePadding(context, 16),
+                                vertical: ResponsiveUtils.scalePadding(context, 12),
                               ),
                               child: TextFormField(
                                 controller: _heightController,
@@ -201,19 +205,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: ResponsiveUtils.scaleSpacing(context, 20)),
 
                   // 体重
-                  const Text(
+                  Text(
                     '体重',
                     style: TextStyle(
                       color: AppTheme.textSecondary,
-                      fontSize: 14,
+                      fontSize: ResponsiveUtils.scaleFont(context, 14),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
                   GlassCard(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: ResponsiveUtils.scalePadding(context, 16),
+                      vertical: ResponsiveUtils.scalePadding(context, 12),
+                    ),
                     child: TextFormField(
                       controller: _weightController,
                       keyboardType: TextInputType.number,
@@ -226,31 +233,31 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: ResponsiveUtils.scaleSpacing(context, 20)),
 
                   // 学校类型
-                  const Text(
+                  Text(
                     '学校类型',
                     style: TextStyle(
                       color: AppTheme.textSecondary,
-                      fontSize: 14,
+                      fontSize: ResponsiveUtils.scaleFont(context, 14),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
                   Row(
                     children: [
                       Expanded(
                         child: GlassCard(
-                          padding: const EdgeInsets.all(16),
+                          padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 16)),
                           child: Column(
                             children: [
-                              const Text('🏠', style: TextStyle(fontSize: 32)),
-                              const SizedBox(height: 8),
-                              const Text(
+                              Text('🏠', style: TextStyle(fontSize: ResponsiveUtils.scaleIcon(context, 32))),
+                              SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
+                              Text(
                                 '走读',
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 16,
+                                  fontSize: ResponsiveUtils.scaleFont(context, 16),
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -258,19 +265,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      SizedBox(width: ResponsiveUtils.scaleSpacing(context, 16)),
                       Expanded(
                         child: GlassCard(
-                          padding: const EdgeInsets.all(16),
+                          padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 16)),
                           child: Column(
                             children: [
-                              const Text('🏫', style: TextStyle(fontSize: 32)),
-                              const SizedBox(height: 8),
-                              const Text(
+                              Text('🏫', style: TextStyle(fontSize: ResponsiveUtils.scaleIcon(context, 32))),
+                              SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
+                              Text(
                                 '住校',
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 16,
+                                  fontSize: ResponsiveUtils.scaleFont(context, 16),
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -280,20 +287,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: ResponsiveUtils.scaleSpacing(context, 20)),
 
                   // 当前阶段
-                  const Text(
+                  Text(
                     '当前阶段',
                     style: TextStyle(
                       color: AppTheme.textSecondary,
-                      fontSize: 14,
+                      fontSize: ResponsiveUtils.scaleFont(context, 14),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
                   Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
+                    spacing: ResponsiveUtils.scaleSpacing(context, 8),
+                    runSpacing: ResponsiveUtils.scaleSpacing(context, 8),
                     children: List.generate(8, (index) {
                       final week = index + 1;
                       final isSelected = week == _currentWeek;
@@ -304,9 +311,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           });
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: ResponsiveUtils.scalePadding(context, 16),
+                            vertical: ResponsiveUtils.scalePadding(context, 8),
                           ),
                           decoration: BoxDecoration(
                             color: isSelected
@@ -323,7 +330,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             '第${week}周',
                             style: TextStyle(
                               color: isSelected ? AppTheme.primaryColor : AppTheme.textSecondary,
-                              fontSize: 12,
+                              fontSize: ResponsiveUtils.scaleFont(context, 12),
                               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                             ),
                           ),
@@ -337,12 +344,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   GlassButton.custom(
                     onTap: _saveProfile,
                     width: double.infinity,
-                    child: const Text(
+                    child: Text(
                       '开始自律之旅',
-                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                      style: TextStyle(color: Colors.white, fontSize: ResponsiveUtils.scaleFont(context, 16), fontWeight: FontWeight.w600),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: ResponsiveUtils.scaleSpacing(context, 20)),
                 ],
               ),
             ),

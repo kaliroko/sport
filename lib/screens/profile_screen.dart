@@ -10,6 +10,7 @@ import 'package:metamorphosis_checkin/utils/constants.dart';
 import 'package:metamorphosis_checkin/models/user_profile.dart';
 import 'package:metamorphosis_checkin/widgets/badge_widget.dart';
 import 'package:metamorphosis_checkin/theme/app_theme.dart';
+import 'package:metamorphosis_checkin/utils/responsive_utils.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -42,13 +43,13 @@ class _ProfileScreenContent extends StatelessWidget {
             child: SafeArea(
               bottom: false,
               child: Padding(
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 20)),
                 child: Column(
                   children: [
                     // 头像
                     Container(
-                      width: 80,
-                      height: 80,
+                      width: ResponsiveUtils.scaleFont(context, 80),
+                      height: ResponsiveUtils.scaleFont(context, 80),
                       decoration: BoxDecoration(
                         color: AppTheme.primaryColor.withValues(alpha: 0.3),
                         shape: BoxShape.circle,
@@ -57,30 +58,30 @@ class _ProfileScreenContent extends StatelessWidget {
                           width: 2,
                         ),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.person,
-                        size: 40,
+                        size: ResponsiveUtils.scaleIcon(context, 40),
                         color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: ResponsiveUtils.scaleSpacing(context, 12)),
                     Text(
                       context.watch<UserProfileService>().profile?.name ?? '自律者',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
-                        fontSize: 24,
+                        fontSize: ResponsiveUtils.scaleFont(context, 24),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       '正在自律中...',
                       style: TextStyle(
                         color: AppTheme.textSecondary,
-                        fontSize: 14,
+                        fontSize: ResponsiveUtils.scaleFont(context, 14),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: ResponsiveUtils.scaleSpacing(context, 24)),
                   ],
                 ),
               ),
@@ -89,43 +90,43 @@ class _ProfileScreenContent extends StatelessWidget {
 
           // 个人数据卡片
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: ResponsiveUtils.scaleHorizontalEdgeInsets(context, 20),
             sliver: SliverToBoxAdapter(
               child: const _ProfileDataCard(),
             ),
           ),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          SliverToBoxAdapter(child: SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16))),
 
           // 成就徽章
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: ResponsiveUtils.scaleHorizontalEdgeInsets(context, 20),
             sliver: SliverToBoxAdapter(
               child: const _BadgesSection(),
             ),
           ),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          SliverToBoxAdapter(child: SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16))),
 
           // 设置选项
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: ResponsiveUtils.scaleHorizontalEdgeInsets(context, 20),
             sliver: SliverToBoxAdapter(
               child: const _SettingsSection(),
             ),
           ),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          SliverToBoxAdapter(child: SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16))),
 
           // 调试选项
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: ResponsiveUtils.scaleHorizontalEdgeInsets(context, 20),
             sliver: SliverToBoxAdapter(
               child: const _DebugSection(),
             ),
           ),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 120)),
+          SliverToBoxAdapter(child: SizedBox(height: ResponsiveUtils.scaleBottomPadding(context))),
         ],
       ),
     );
@@ -140,19 +141,19 @@ class _ProfileDataCard extends StatelessWidget {
     final profile = context.watch<UserProfileService>().profile;
     
     return GlassCard(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 20)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             '个人数据',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 18,
+              fontSize: ResponsiveUtils.scaleFont(context, 18),
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16)),
           Row(
             children: [
               _DataItem(
@@ -160,7 +161,7 @@ class _ProfileDataCard extends StatelessWidget {
                 label: '年龄',
                 value: '${profile?.age ?? 16}岁',
               ),
-              const SizedBox(width: 24),
+              SizedBox(width: ResponsiveUtils.scaleSpacing(context, 24)),
               _DataItem(
                 icon: Icons.height,
                 label: '身高',
@@ -168,7 +169,7 @@ class _ProfileDataCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16)),
           Row(
             children: [
               _DataItem(
@@ -176,7 +177,7 @@ class _ProfileDataCard extends StatelessWidget {
                 label: '体重',
                 value: '${profile?.weightKg ?? 65}kg',
               ),
-              const SizedBox(width: 24),
+              SizedBox(width: ResponsiveUtils.scaleSpacing(context, 24)),
               _DataItem(
                 icon: Icons.calculate,
                 label: 'BMI',
@@ -184,7 +185,7 @@ class _ProfileDataCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16)),
           Row(
             children: [
               _DataItem(
@@ -192,7 +193,7 @@ class _ProfileDataCard extends StatelessWidget {
                 label: '状态',
                 value: profile?.schoolType == SchoolType.boarder ? '住校' : '走读',
               ),
-              const SizedBox(width: 24),
+              SizedBox(width: ResponsiveUtils.scaleSpacing(context, 24)),
               _DataItem(
                 icon: Icons.flag,
                 label: '当前阶段',
@@ -222,21 +223,21 @@ class _DataItem extends StatelessWidget {
     return Expanded(
       child: Column(
         children: [
-          Icon(icon, color: AppTheme.primaryColor, size: 24),
-          const SizedBox(height: 4),
+          Icon(icon, color: AppTheme.primaryColor, size: ResponsiveUtils.scaleIcon(context, 24)),
+          SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppTheme.textSecondary,
-              fontSize: 12,
+              fontSize: ResponsiveUtils.scaleFont(context, 12),
             ),
           ),
-          const SizedBox(height: 2),
+          SizedBox(height: 2),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
-              fontSize: 14,
+              fontSize: ResponsiveUtils.scaleFont(context, 14),
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -252,19 +253,19 @@ class _BadgesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassCard(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             '成就徽章',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 18,
+              fontSize: ResponsiveUtils.scaleFont(context, 18),
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16)),
           Wrap(
             spacing: 12,
             runSpacing: 12,
@@ -287,43 +288,43 @@ class _SettingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassCard(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             '设置',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 18,
+              fontSize: ResponsiveUtils.scaleFont(context, 18),
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16)),
           _SettingsItem(
             icon: Icons.edit,
             title: '编辑资料',
             onTap: () {},
           ),
-          const Divider(color: AppTheme.textHint),
+          Divider(color: AppTheme.textHint),
           _SettingsItem(
             icon: Icons.tune,
             title: '选择阶段',
             onTap: () {},
           ),
-          const Divider(color: AppTheme.textHint),
+          Divider(color: AppTheme.textHint),
           _SettingsItem(
             icon: Icons.notifications,
             title: '提醒设置',
             onTap: () {},
           ),
-          const Divider(color: AppTheme.textHint),
+          Divider(color: AppTheme.textHint),
           _SettingsItem(
             icon: Icons.download,
             title: '导出数据',
             onTap: () {},
           ),
-          const Divider(color: AppTheme.textHint),
+          Divider(color: AppTheme.textHint),
           _SettingsItem(
             icon: Icons.cloud,
             title: '云备份',
@@ -375,19 +376,19 @@ class _DebugSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassCard(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             '调试工具',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 18,
+              fontSize: ResponsiveUtils.scaleFont(context, 18),
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: ResponsiveUtils.scaleSpacing(context, 12)),
           _DebugItem(
             icon: Icons.cloud_upload,
             title: '上传全部数据',
@@ -395,7 +396,7 @@ class _DebugSection extends StatelessWidget {
             color: AppTheme.primaryColor,
             onTap: () => _showDebugPanel(context),
           ),
-          const Divider(color: AppTheme.textHint),
+          Divider(color: AppTheme.textHint),
           _DebugItem(
             icon: Icons.fitness_center,
             title: '上传运动数据',
@@ -403,7 +404,7 @@ class _DebugSection extends StatelessWidget {
             color: AppTheme.secondaryColor,
             onTap: () => _uploadWorkoutOnly(context),
           ),
-          const Divider(color: AppTheme.textHint),
+          Divider(color: AppTheme.textHint),
           _DebugItem(
             icon: Icons.check_circle,
             title: '上传打卡数据',
@@ -411,7 +412,7 @@ class _DebugSection extends StatelessWidget {
             color: AppTheme.successColor,
             onTap: () => _uploadCheckInOnly(context),
           ),
-          const Divider(color: AppTheme.textHint),
+          Divider(color: AppTheme.textHint),
           _DebugItem(
             icon: Icons.wifi,
             title: '测试连接',
