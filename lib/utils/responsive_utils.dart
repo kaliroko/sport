@@ -24,7 +24,6 @@ class ResponsiveUtils {
   /// [baseSize] 为设计师设定的基准字号（对应 ~430dp 宽屏幕）
   static double scaleFont(BuildContext context, double baseSize) {
     final width = screenWidth(context);
-    final ratio = (_referenceWidth / _referenceWidth).clamp(0.8, 1.0);
     // 使用 log 映射让缩放更平滑，避免小屏上字号缩得太小
     final clampedRatio = (width / _referenceWidth).clamp(0.75, 1.0);
     return (baseSize * clampedRatio).clamp(8.0, baseSize);
