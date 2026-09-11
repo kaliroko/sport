@@ -2,9 +2,8 @@
 # Flutter 引擎相关类必须保留，否则 App 崩溃
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.** { *; }
-# FlutterApplication 由 Manifest 引用，R8 可能误判为未使用，强制保留
--keep class io.flutter.embedding.android.FlutterApplication { *; }
--keep class io.flutter.embedding.android.FlutterPlayStoreSplitApplication { *; }
+# 我们的自定义 Application 类
+-keep class com.metamorphosis.checkin.FlutterApp { *; }
 
 # MainActivity 必须保留
 -keep class com.metamorphosis.checkin.MainActivity { *; }
@@ -46,3 +45,5 @@
 -dontwarn com.google.android.play.core.tasks.**
 # Flutter DeferredComponents 在 Release 构建中不会触发，忽略相关警告
 -dontwarn io.flutter.embedding.engine.deferredcomponents.**
+# 允许 R8 处理缺失类（不将其视为错误）
+-dontnote com.google.android.play.core.splitinstall.**
