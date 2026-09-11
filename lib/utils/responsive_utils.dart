@@ -24,7 +24,6 @@ class ResponsiveUtils {
   /// [baseSize] 为设计师设定的基准字号（对应 ~430dp 宽屏幕）
   static double scaleFont(BuildContext context, double baseSize) {
     final width = screenWidth(context);
-    // 使用 log 映射让缩放更平滑，避免小屏上字号缩得太小
     final clampedRatio = (width / _referenceWidth).clamp(0.75, 1.0);
     return (baseSize * clampedRatio).clamp(8.0, baseSize);
   }
@@ -82,9 +81,18 @@ class ResponsiveUtils {
     return screenWidth(context) < 380.0;
   }
 
-  /// 缩放底部空白区域（防止被导航栏遮挡）
+  /// 缩放底部空白区域：基于屏幕宽度按比例缩放，适合 Content ScrollView 底部留白
   static double scaleBottomPadding(BuildContext context) {
     final clampedRatio = (screenWidth(context) / _referenceWidth).clamp(0.7, 1.0);
     return (80.0 * clampedRatio).clamp(48.0, 100.0);
+  }
+
+  /// 计算实际需要的底部安全间距，防止内容被底部导航栏或手势导航区遮挡
+  /// 取值：系统底部安全区 inset + 16dp 缓冲，或直接使用 scaleBottomPadding，取较大值
+  static double bottomSafePadding(BuildContext context) {
+    final systemInset = MediaQuery.of(context).padding.bottom;
+    final scaled = scaleBottomPadding(context);
+    // 系统手势导航区通常 0~48dp，加上 glass bottom bar 高度和 margin（约 80dp）
+    return (scaled + systemInset).clamp(48.0, 140.0);
   }
 }

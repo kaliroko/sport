@@ -126,7 +126,7 @@ class _ProfileScreenContent extends StatelessWidget {
             ),
           ),
 
-          SliverToBoxAdapter(child: SizedBox(height: ResponsiveUtils.scaleBottomPadding(context))),
+          SliverToBoxAdapter(child: SizedBox(height: ResponsiveUtils.bottomSafePadding(context))),
         ],
       ),
     );

@@ -79,7 +79,7 @@ class _DietScreenContent extends StatelessWidget {
           ),
 
           SliverToBoxAdapter(
-            child: SizedBox(height: ResponsiveUtils.scaleBottomPadding(context)),
+            child: SizedBox(height: ResponsiveUtils.bottomSafePadding(context)),
           ),
         ],
       ),

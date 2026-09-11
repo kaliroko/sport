@@ -93,7 +93,7 @@ class _StatsScreenContent extends StatelessWidget {
               child: const _DailyCompletionChart(),
             ),
           ),
-          SliverToBoxAdapter(child: SizedBox(height: ResponsiveUtils.scaleBottomPadding(context))),
+          SliverToBoxAdapter(child: SizedBox(height: ResponsiveUtils.bottomSafePadding(context))),
         ],
       ),
     );

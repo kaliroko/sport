@@ -260,7 +260,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                 ),
               ),
               SliverToBoxAdapter(
-                child: SizedBox(height: ResponsiveUtils.scaleBottomPadding(context)),
+                child: SizedBox(height: ResponsiveUtils.bottomSafePadding(context)),
               ),
             ],
           ),
