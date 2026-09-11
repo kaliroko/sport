@@ -11,6 +11,8 @@ library;
 
 import 'dart:math';
 
+import 'package:flutter/animation.dart';
+
 /// MD3 物理弹簧曲线实现
 /// 模拟真实弹簧的过冲（overshoot）+ 衰减振荡行为
 class Md3SpringCurve extends Curve {
