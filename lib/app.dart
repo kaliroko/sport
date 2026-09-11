@@ -123,7 +123,7 @@ class _MainScreenState extends State<MainScreen> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: GlassBottomBar(
-          quality: GlassQuality.lightweight,
+          quality: GlassQuality.standard,
           glassSettings: null,
           tabs: [
             GlassBottomBarTab(

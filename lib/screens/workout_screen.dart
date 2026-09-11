@@ -4,7 +4,6 @@ library;
 import 'package:flutter/material.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
-import 'package:metamorphosis_checkin/services/workout_service.dart';
 import 'package:metamorphosis_checkin/services/user_profile_service.dart';
 import 'package:metamorphosis_checkin/utils/constants.dart';
 import 'package:metamorphosis_checkin/theme/app_theme.dart';
@@ -106,7 +105,7 @@ class _WorkoutScreenContentState extends State<_WorkoutScreenContent> with Ticke
 
     return AdaptiveLiquidGlassLayer(
       settings: const LiquidGlassSettings(),
-      quality: GlassQuality.lightweight,
+      quality: GlassQuality.standard,
       blendAmount: 10.0,
       child: CustomScrollView(
         slivers: [
@@ -417,12 +416,10 @@ class _ExerciseCard extends StatelessWidget {
 class _TimerFloatingHeader extends SliverPersistentHeaderDelegate {
   final int seconds;
   final VoidCallback onStop;
-  final int _lastSeconds;
 
   _TimerFloatingHeader({
     required this.seconds,
     required this.onStop,
-    this._lastSeconds = -1,
   });
 
   @override

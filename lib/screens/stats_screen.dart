@@ -27,7 +27,7 @@ class _StatsScreenContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return AdaptiveLiquidGlassLayer(
       settings: const LiquidGlassSettings(),
-      quality: GlassQuality.lightweight,
+      quality: GlassQuality.standard,
       blendAmount: 10.0,
       child: CustomScrollView(
         slivers: [
