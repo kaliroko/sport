@@ -1,9 +1,9 @@
 plugins {
-    id("com.android.application") version "8.5.2" apply false
-    id("org.jetbrains.kotlin.android") version "1.9.24" apply false
+    id("com.android.application") version "8.6.1" apply false
+    id("org.jetbrains.kotlin.android") version "2.1.20" apply false
 }
 
-val kotlinVersion by extra("1.9.24")
+val kotlinVersion by extra("2.1.20")
 
 rootProject.buildDir = file("../build")
 subprojects {
