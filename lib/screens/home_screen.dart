@@ -77,7 +77,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
       children: [
         AdaptiveLiquidGlassLayer(
           settings: const LiquidGlassSettings(),
-          quality: GlassQuality.lightweight,
+          quality: GlassQuality.standard,
           blendAmount: 10.0,
           child: CustomScrollView(
             slivers: [
