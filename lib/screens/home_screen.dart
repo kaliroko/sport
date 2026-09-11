@@ -18,10 +18,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => CheckInService()..init(),
-      child: const _HomeScreenContent(),
-    );
+    return const _HomeScreenContent();
   }
 }
 
@@ -80,7 +77,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
       children: [
         AdaptiveLiquidGlassLayer(
           settings: const LiquidGlassSettings(),
-          quality: GlassQuality.standard,
+          quality: GlassQuality.lightweight,
           blendAmount: 10.0,
           child: CustomScrollView(
             slivers: [

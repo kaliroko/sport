@@ -17,13 +17,7 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => UserProfileService()..init()),
-        ChangeNotifierProvider(create: (_) => DebugUploadService()),
-      ],
-      child: const _ProfileScreenContent(),
-    );
+    return const _ProfileScreenContent();
   }
 }
 
@@ -34,7 +28,7 @@ class _ProfileScreenContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return AdaptiveLiquidGlassLayer(
       settings: const LiquidGlassSettings(),
-      quality: GlassQuality.standard,
+      quality: GlassQuality.lightweight,
       blendAmount: 10.0,
       child: CustomScrollView(
         slivers: [

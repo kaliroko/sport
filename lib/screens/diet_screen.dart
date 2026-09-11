@@ -15,10 +15,7 @@ class DietScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => UserProfileService()..init(),
-      child: const _DietScreenContent(),
-    );
+    return const _DietScreenContent();
   }
 }
 
@@ -29,7 +26,7 @@ class _DietScreenContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return AdaptiveLiquidGlassLayer(
       settings: const LiquidGlassSettings(),
-      quality: GlassQuality.standard,
+      quality: GlassQuality.lightweight,
       blendAmount: 10.0,
       child: CustomScrollView(
         slivers: [
