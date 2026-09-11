@@ -218,7 +218,7 @@ class _WorkoutScreenContentState extends State<_WorkoutScreenContent> with Ticke
             ),
 
           SliverToBoxAdapter(
-            child: SizedBox(height: ResponsiveUtils.scaleBottomPadding(context)),
+            child: SizedBox(height: ResponsiveUtils.bottomSafePadding(context)),
           ),
         ],
       ),
