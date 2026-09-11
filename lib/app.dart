@@ -12,19 +12,10 @@ import 'package:metamorphosis_checkin/screens/stats_screen.dart';
 import 'package:metamorphosis_checkin/screens/profile_screen.dart';
 import 'package:metamorphosis_checkin/screens/onboarding_screen.dart';
 import 'package:metamorphosis_checkin/services/user_profile_service.dart';
+import 'package:metamorphosis_checkin/services/check_in_service.dart';
+import 'package:metamorphosis_checkin/services/workout_service.dart';
+import 'package:metamorphosis_checkin/services/debug_upload_service.dart';
 import 'package:metamorphosis_checkin/database/app_database.dart';
-
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  
-  // 初始化液态玻璃
-  await LiquidGlassWidgets.initialize();
-  
-  // 初始化数据库
-  await DatabaseManager.init();
-  
-  runApp(const MetamorphosisApp());
-}
 
 class MetamorphosisApp extends StatelessWidget {
   const MetamorphosisApp({super.key});
@@ -34,6 +25,9 @@ class MetamorphosisApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UserProfileService()..init()),
+        ChangeNotifierProvider(create: (_) => CheckInService()..init()),
+        ChangeNotifierProvider(create: (_) => WorkoutService()..init()),
+        ChangeNotifierProvider(create: (_) => DebugUploadService()),
       ],
       child: MaterialApp(
         title: '自律',
@@ -129,7 +123,7 @@ class _MainScreenState extends State<MainScreen> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: GlassBottomBar(
-          quality: GlassQuality.premium,
+          quality: GlassQuality.lightweight,
           glassSettings: null,
           tabs: [
             GlassBottomBarTab(

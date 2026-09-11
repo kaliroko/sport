@@ -16,13 +16,7 @@ class StatsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => CheckInService()..init()),
-        ChangeNotifierProvider(create: (_) => WorkoutService()..init()),
-      ],
-      child: const _StatsScreenContent(),
-    );
+    return const _StatsScreenContent();
   }
 }
 
@@ -33,7 +27,7 @@ class _StatsScreenContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return AdaptiveLiquidGlassLayer(
       settings: const LiquidGlassSettings(),
-      quality: GlassQuality.standard,
+      quality: GlassQuality.lightweight,
       blendAmount: 10.0,
       child: CustomScrollView(
         slivers: [

@@ -59,7 +59,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     return AdaptiveLiquidGlassLayer(
       settings: const LiquidGlassSettings(),
-      quality: GlassQuality.standard,
+      quality: GlassQuality.lightweight,
       blendAmount: 10.0,
       child: Scaffold(
         backgroundColor: AppTheme.backgroundColor,

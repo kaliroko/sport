@@ -15,13 +15,7 @@ class WorkoutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => WorkoutService()..init()),
-        ChangeNotifierProvider(create: (_) => UserProfileService()..init()),
-      ],
-      child: const _WorkoutScreenContent(),
-    );
+    return const _WorkoutScreenContent();
   }
 }
 
@@ -112,7 +106,7 @@ class _WorkoutScreenContentState extends State<_WorkoutScreenContent> with Ticke
 
     return AdaptiveLiquidGlassLayer(
       settings: const LiquidGlassSettings(),
-      quality: GlassQuality.standard,
+      quality: GlassQuality.lightweight,
       blendAmount: 10.0,
       child: CustomScrollView(
         slivers: [
@@ -423,10 +417,12 @@ class _ExerciseCard extends StatelessWidget {
 class _TimerFloatingHeader extends SliverPersistentHeaderDelegate {
   final int seconds;
   final VoidCallback onStop;
+  final int _lastSeconds;
 
   _TimerFloatingHeader({
     required this.seconds,
     required this.onStop,
+    this._lastSeconds = -1,
   });
 
   @override
@@ -491,5 +487,8 @@ class _TimerFloatingHeader extends SliverPersistentHeaderDelegate {
   double get minExtent => 80;
 
   @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) => true;
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
+    final old = oldDelegate as _TimerFloatingHeader;
+    return seconds != old.seconds;
+  }
 }
