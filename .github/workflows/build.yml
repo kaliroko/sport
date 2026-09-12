@@ -69,6 +69,34 @@ jobs:
           echo "flutter.versionCode=1" >> android/local.properties
           echo "flutter.versionName=1.0.0" >> android/local.properties
 
+      # 从仓库 Secrets 还原签名密钥。
+      # 需在 GitHub 仓库 Settings → Secrets and variables → Actions 配置：
+      #   ANDROID_KEYSTORE_BASE64   keystore.jks 的 base64
+      #   ANDROID_KEYSTORE_PASSWORD 密钥库密码
+      #   ANDROID_KEY_ALIAS         密钥别名
+      #   ANDROID_KEY_PASSWORD      密钥密码
+      # 生成第一项的本地命令： base64 -w0 android/app/keystore.jks
+      # 若 Secrets 未配置则跳过，构建回退为 debug 签名（能通过，但不能上架）。
+      - name: Setup signing keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "未配置签名 Secrets，将使用 debug 签名"
+            exit 0
+          fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
+          {
+            echo "storePassword=$ANDROID_KEYSTORE_PASSWORD"
+            echo "keyPassword=$ANDROID_KEY_PASSWORD"
+            echo "keyAlias=$ANDROID_KEY_ALIAS"
+            echo "storeFile=app/keystore.jks"
+          } > android/key.properties
+          echo "签名密钥已就绪"
+
       - name: Get dependencies
         run: flutter pub get
 

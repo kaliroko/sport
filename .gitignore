@@ -21,6 +21,12 @@ android/app/src/main/java/
 android/app/src/main/jniLibs
 android/app/src/main/assets
 
+# 签名密钥与密码 —— 绝对不能进版本库
+# 丢了 keystore 就无法给已发布的应用推更新，泄了密码别人就能冒名签名
+*.jks
+*.keystore
+android/key.properties
+
 # iOS
 ios/Pods
 ios/.symlinks

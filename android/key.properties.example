@@ -1,5 +1,37 @@
-# Android Keystore - 请替换为您的密钥
-storePassword=
-keyPassword=
+# Android 签名配置示例
+#
+# 使用方法：
+#   1. 把本文件复制为同目录下的 key.properties
+#   2. 填入你自己的密钥信息
+#
+# ！key.properties 与 *.jks / *.keystore 都已在 .gitignore 中排除。
+#   丢了 keystore 就无法给已发布的应用推更新；泄露了密码别人能冒名签名。
+#   请另外做离线备份。
+
+storePassword=你的密钥库密码
+keyPassword=你的密钥密码
 keyAlias=upload
-storeFile=../../keystore.jks
+# 相对 android/ 目录
+storeFile=app/keystore.jks
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# 生成新密钥（有效期 10000 天 ≈ 27 年；Google Play 要求至少 25 年）
+#
+#   keytool -genkeypair -v \
+#     -keystore android/app/keystore.jks \
+#     -storetype PKCS12 \
+#     -keyalg RSA -keysize 2048 -validity 10000 \
+#     -alias upload \
+#     -storepass 你的密码 -keypass 你的密码 \
+#     -dname "CN=你的名字, OU=Mobile, O=组织, L=城市, ST=省份, C=CN"
+#
+# 查看指纹（用于校验，或配置需要签名指纹的第三方 SDK）：
+#   keytool -list -v -keystore android/app/keystore.jks -storepass 你的密码
+#
+# GitHub Actions 请用 Secrets，不要把密钥提交进仓库：
+#   ANDROID_KEYSTORE_BASE64   ← base64 -w0 android/app/keystore.jks 的输出
+#   ANDROID_KEYSTORE_PASSWORD
+#   ANDROID_KEY_ALIAS
+#   ANDROID_KEY_PASSWORD
+# ─────────────────────────────────────────────────────────────────────────
