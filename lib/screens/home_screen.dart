@@ -37,7 +37,6 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
   late AnimationController _checkController;
   late Animation<double> _checkAnimation;
   bool _showCelebration = false;
-  String? _lastCheckedTask;
 
   @override
   void initState() {
@@ -191,7 +190,6 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                         padding: EdgeInsets.only(bottom: ResponsiveUtils.scaleSpacing(context, 10)),
                         child: TaskCard(height: 80, task: task, isChecked: isChecked, onToggle: () {
                           service.toggleTask(task.id, !isChecked);
-                          setState(() => _lastCheckedTask = task.name);
                           if (!isChecked) {
                             _showTaskSuccess(context, task.name);
                             final remaining = AppConstants.dailyTasks.where((t) => !_isTaskChecked(service, t.id)).length;

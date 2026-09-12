@@ -312,28 +312,28 @@ class _ProfileScreenContentState extends State<_ProfileScreenContent> with Autom
               ],
             ],
           ),
-          actions: [
-            GlassDialogAction(label: '取消', onPressed: () => Navigator.pop(ctx)),
-            GlassDialogAction(
-              label: '保存',
-              isPrimary: true,
-              onPressed: () async {
-                if (waterEnabled) {
-                  await notificationService.scheduleWaterReminder(9, 0);
-                  setDlgState(() => waterConfirmed = true);
-                }
-                if (sleepEnabled) {
-                  await notificationService.scheduleDailyReminder(id: 999, title: '早点休息', body: '今晚争取23点前入睡！', time: DateTime.now().add(const Duration(days: 1)).copyWith(hour: 22, minute: 0));
-                  setDlgState(() => sleepConfirmed = true);
-                }
-                if (waterConfirmed || sleepConfirmed) {
-                  Navigator.pop(ctx);
-                  if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('提醒已设置 ✓'), backgroundColor: AppTheme.successColor, behavior: SnackBarBehavior.floating));
-                }
-              },
-            ),
-          ],
         ),
+        actions: [
+          GlassDialogAction(label: '取消', onPressed: () => Navigator.pop(context)),
+          GlassDialogAction(
+            label: '保存',
+            isPrimary: true,
+            onPressed: () async {
+              if (waterEnabled) {
+                await notificationService.scheduleWaterReminder(9, 0);
+                setDlgState(() => waterConfirmed = true);
+              }
+              if (sleepEnabled) {
+                await notificationService.scheduleDailyReminder(id: 999, title: '早点休息', body: '今晚争取23点前入睡！', time: DateTime.now().add(const Duration(days: 1)).copyWith(hour: 22, minute: 0));
+                setDlgState(() => sleepConfirmed = true);
+              }
+              if (waterConfirmed || sleepConfirmed) {
+                Navigator.pop(context);
+                if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('提醒已设置 ✓'), backgroundColor: AppTheme.successColor, behavior: SnackBarBehavior.floating));
+              }
+            },
+          ),
+        ],
       ),
     );
   }
