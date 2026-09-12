@@ -8,7 +8,6 @@ import 'package:metamorphosis_checkin/services/user_profile_service.dart';
 import 'package:metamorphosis_checkin/services/debug_upload_service.dart';
 import 'package:metamorphosis_checkin/utils/constants.dart';
 import 'package:metamorphosis_checkin/models/user_profile.dart';
-import 'package:metamorphosis_checkin/widgets/badge_widget.dart';
 import 'package:metamorphosis_checkin/theme/app_theme.dart';
 import 'package:metamorphosis_checkin/utils/responsive_utils.dart';
 
@@ -111,10 +110,17 @@ class _ProfileScreenContentState extends State<_ProfileScreenContent> with Autom
           ),
           SliverToBoxAdapter(child: SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16))),
 
-          // 成就徽章
+          // 每日激励金句
           SliverPadding(
             padding: ResponsiveUtils.scaleHorizontalEdgeInsets(context, 20),
-            sliver: SliverToBoxAdapter(child: const _BadgesSection()),
+            sliver: SliverToBoxAdapter(child: const _DailyQuoteCard()),
+          ),
+          SliverToBoxAdapter(child: SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16))),
+
+          // 本周训练进度
+          SliverPadding(
+            padding: ResponsiveUtils.scaleHorizontalEdgeInsets(context, 20),
+            sliver: SliverToBoxAdapter(child: const _WeeklyProgressCard()),
           ),
           SliverToBoxAdapter(child: SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16))),
 
@@ -504,28 +510,6 @@ class _DataItem extends StatelessWidget {
           Text(label, style: TextStyle(color: AppTheme.textSecondary, fontSize: ResponsiveUtils.scaleFont(context, 12))),
           SizedBox(height: 2),
           Text(value, style: TextStyle(color: Colors.white, fontSize: ResponsiveUtils.scaleFont(context, 14), fontWeight: FontWeight.w600), textAlign: TextAlign.center),
-        ],
-      ),
-    );
-  }
-}
-
-class _BadgesSection extends StatelessWidget {
-  const _BadgesSection();
-  @override
-  Widget build(BuildContext context) {
-    return GlassCard(
-      padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 16)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('成就徽章', style: TextStyle(color: Colors.white, fontSize: ResponsiveUtils.scaleFont(context, 18), fontWeight: FontWeight.bold)),
-          SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16)),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: AppConstants.badges.map((badge) => BadgeWidget(badge: badge, isUnlocked: false)).toList(),
-          ),
         ],
       ),
     );
