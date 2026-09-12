@@ -310,6 +310,7 @@ class _ProfileScreenContentState extends State<_ProfileScreenContent> with Autom
               ],
             ],
           ),
+      ),
       actions: [
           GlassDialogAction(label: '取消', onPressed: () => Navigator.pop(context)),
           GlassDialogAction(
@@ -332,7 +333,6 @@ class _ProfileScreenContentState extends State<_ProfileScreenContent> with Autom
           ),
         ],
       ),
-    );
   }
 
   // ─── 导出数据 ──────────────────────────────────────────────────────────────
