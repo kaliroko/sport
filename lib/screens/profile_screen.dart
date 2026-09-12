@@ -153,7 +153,7 @@ class _ProfileScreenContentState extends State<_ProfileScreenContent> with Autom
     await GlassDialog.show<String?>(
       context: context,
       title: '编辑资料',
-        content: Column(
+      content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -231,11 +231,9 @@ class _ProfileScreenContentState extends State<_ProfileScreenContent> with Autom
   Future<void> _showPhaseSelector(BuildContext context) async {
     final profile = context.read<UserProfileService>().profile;
     final currentWeek = profile?.currentWeek ?? 1;
-    final week = await showDialog<int?>(
+    final week = await GlassDialog.show<int?>(
       context: context,
-      builder: (_) => GlassDialog.show<int?>(
-        context: context,
-        title: '选择训练阶段',
+      title: '选择训练阶段',
         message: '选择你当前所在阶段，系统将调整训练计划难度',
         content: Wrap(
           spacing: 10,
@@ -284,13 +282,11 @@ class _ProfileScreenContentState extends State<_ProfileScreenContent> with Autom
     bool waterConfirmed = false;
     bool sleepConfirmed = false;
 
-    await showDialog<void>(
+    await GlassDialog.show<void>(
       context: context,
-      builder: (_) => StatefulBuilder(
-        builder: (ctx, setDlgState) => GlassDialog.show<void>(
-          context: ctx,
-          title: '提醒设置',
-          content: Column(
+      title: '提醒设置',
+      content: StatefulBuilder(
+        builder: (ctx, setDlgState) => Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

@@ -277,11 +277,9 @@ class _WorkoutScreenContentState extends State<_WorkoutScreenContent>
 
 // ─── 计划选择器 ────────────────────────────────────────────────────────────────
 Future<void> _showPlanSelector(BuildContext context, WorkoutPlanService planService) async {
-  final planId = await showDialog<String?>(
+  final planId = await GlassDialog.show<String?>(
     context: context,
-    builder: (_) => GlassDialog.show<String?>(
-      context: context,
-      title: '选择训练计划',
+    title: '选择训练计划',
       content: Column(mainAxisSize: MainAxisSize.min, children: WorkoutPlans.all.map((plan) {
         final isSelected = plan.id == planService.selectedPlanId;
         return GestureDetector(
@@ -311,8 +309,7 @@ Future<void> _showPlanSelector(BuildContext context, WorkoutPlanService planServ
         GlassDialogAction(label: '取消', onPressed: () => Navigator.pop(context)),
         GlassDialogAction(label: '确认', isPrimary: true, onPressed: () => Navigator.pop(context, planService.selectedPlanId)),
       ],
-    ),
-  );
+    );
   if (planId != null && context.mounted) planService.selectPlan(planId);
 }
 
