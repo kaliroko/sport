@@ -44,6 +44,10 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
   int _streak = 0;
   int _bestStreak = 0;
 
+  // 独立追踪器「自律守护」的连续天数（不参与上面那 10 项的完成率）
+  int _abstinenceStreak = 0;
+  int _bestAbstinenceStreak = 0;
+
   @override
   void initState() {
     super.initState();
@@ -67,11 +71,15 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
     final results = await Future.wait([
       service.getConsecutiveDays(),
       service.getBestStreak(),
+      service.getAbstinenceStreak(),
+      service.getBestAbstinenceStreak(),
     ]);
     if (!mounted) return;
     setState(() {
       _streak = results[0];
       _bestStreak = results[1];
+      _abstinenceStreak = results[2];
+      _bestAbstinenceStreak = results[3];
     });
   }
 
@@ -213,6 +221,17 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                             height: ResponsiveUtils.scaleButtonHeight(context, 48),
                             child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Text('✨ 一键完成今日打卡', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600))]),
                           ),
+                        SizedBox(height: ResponsiveUtils.scaleSpacing(context, 12)),
+
+                        // ─── 独立追踪：自律守护打卡 ───
+                        // 单独成块，不与上面那 10 项每日任务混在一起；
+                        // 右侧是一个明显更大的圆形打卡按钮。
+                        _AbstinenceCard(
+                          service: service,
+                          streak: _abstinenceStreak,
+                          bestStreak: _bestAbstinenceStreak,
+                          onChanged: _loadStreaks,
+                        ),
                         SizedBox(height: ResponsiveUtils.scaleSpacing(context, 12)),
                       ],
                     ),
@@ -535,6 +554,132 @@ class _WaterTracker extends StatelessWidget {
           }),
         ),
       ]),
+    );
+  }
+}
+
+// ─── 自律守护打卡（独立追踪）──────────────────────────────────────────────────
+/// 单独成块的一个追踪器，右侧是一个明显更大的圆形打卡按钮。
+///
+/// 刻意**不并入** AppConstants.dailyTasks：它不参与完成率与环形图，
+/// 也不会被「一键完成」顺带打上，拥有自己独立的连续天数统计。
+class _AbstinenceCard extends StatelessWidget {
+  final CheckInService service;
+  final int streak;
+  final int bestStreak;
+  final VoidCallback onChanged;
+
+  const _AbstinenceCard({
+    required this.service,
+    required this.streak,
+    required this.bestStreak,
+    required this.onChanged,
+  });
+
+  /// 用紫色系以区别于每日任务的主色（青蓝），突出「独立追踪」
+  static const Color _accent = AppTheme.secondaryColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool done = service.todayCheckIn?.abstinence ?? false;
+    final double buttonSize = ResponsiveUtils.scaleSize(context, 84);
+
+    return GlassCard(
+      padding: EdgeInsets.symmetric(
+        horizontal: ResponsiveUtils.scalePadding(context, 16),
+        vertical: ResponsiveUtils.scalePadding(context, 14),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: ResponsiveUtils.scaleSize(context, 44),
+            height: ResponsiveUtils.scaleSize(context, 44),
+            decoration: BoxDecoration(
+              color: (done ? AppTheme.successColor : _accent).withValues(alpha: 0.22),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Icon(
+                done ? Icons.verified_user : Icons.shield_outlined,
+                color: done ? AppTheme.successColor : _accent,
+                size: ResponsiveUtils.scaleIcon(context, 24),
+              ),
+            ),
+          ),
+          SizedBox(width: ResponsiveUtils.scaleSpacing(context, 12)),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('禁欲打卡',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: Colors.white, fontSize: ResponsiveUtils.scaleFont(context, 16), fontWeight: FontWeight.bold)),
+                SizedBox(height: ResponsiveUtils.scaleSpacing(context, 4)),
+                Row(children: [
+                  Icon(Icons.local_fire_department, color: AppTheme.warningColor, size: ResponsiveUtils.scaleIcon(context, 13)),
+                  SizedBox(width: ResponsiveUtils.scaleSpacing(context, 4)),
+                  Flexible(
+                    child: Text('连续 $streak 天 · 最佳 $bestStreak 天',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: AppTheme.textSecondary, fontSize: ResponsiveUtils.scaleFont(context, 12))),
+                  ),
+                ]),
+                SizedBox(height: ResponsiveUtils.scaleSpacing(context, 2)),
+                Text(done ? '今日已打卡，继续坚持 💪' : '独立追踪，不影响上方完成率',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: done ? AppTheme.successColor : AppTheme.textHint,
+                      fontSize: ResponsiveUtils.scaleFont(context, 11),
+                    )),
+              ],
+            ),
+          ),
+          SizedBox(width: ResponsiveUtils.scaleSpacing(context, 10)),
+
+          // ─── 右侧：突出的大号打卡按钮 ───
+          GestureDetector(
+            onTap: () async {
+              final wasDone = done;
+              await service.toggleAbstinence(!wasDone);
+              onChanged();
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(wasDone ? '已取消今日打卡' : '今日自律守护打卡成功 🛡'),
+                backgroundColor: wasDone ? AppTheme.infoColor : AppTheme.successColor,
+                behavior: SnackBarBehavior.floating,
+              ));
+            },
+            child: Container(
+              width: buttonSize,
+              height: buttonSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: (done ? AppTheme.successColor : _accent).withValues(alpha: done ? 0.28 : 0.18),
+                border: Border.all(color: done ? AppTheme.successColor : _accent, width: 3),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(done ? Icons.check : Icons.touch_app,
+                      color: done ? AppTheme.successColor : _accent,
+                      size: ResponsiveUtils.scaleIcon(context, 28)),
+                  SizedBox(height: ResponsiveUtils.scaleSpacing(context, 2)),
+                  Text(done ? '已打卡' : '打卡',
+                      style: TextStyle(
+                        color: done ? AppTheme.successColor : _accent,
+                        fontSize: ResponsiveUtils.scaleFont(context, 12),
+                        fontWeight: FontWeight.bold,
+                      )),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -73,25 +73,83 @@ class CheckInRepository {
   }
 
   /// 获取最佳连续记录
+  ///
+  /// 顺带修复：原实现只按数组下标累加，**不校验日期是否连续**，
+  /// 于是 1 月 1 日和 1 月 10 日两条记录会被算成「连续 2 天」。
+  /// 现在改为比较相邻记录的日期差，跨断档会重新计数。
   Future<int> getBestStreak() async {
-    final allCheckIns = await getAllCheckIns();
+    final allCheckIns = await getAllCheckIns(); // date DESC
     if (allCheckIns.isEmpty) return 0;
-    
+
     int bestStreak = 0;
     int currentStreak = 0;
-    
-    for (final checkIn in allCheckIns) {
+    DateTime? previousDate;
+
+    for (final checkIn in allCheckIns.reversed) { // 升序
       if (checkIn.completionRate >= 80) {
-        currentStreak++;
-        if (currentStreak > bestStreak) {
-          bestStreak = currentStreak;
+        final date = DateTime.parse(checkIn.date);
+        if (previousDate != null && date.difference(previousDate).inDays == 1) {
+          currentStreak++;
+        } else {
+          currentStreak = 1;
         }
+        if (currentStreak > bestStreak) bestStreak = currentStreak;
+        previousDate = date;
       } else {
         currentStreak = 0;
+        previousDate = null;
       }
     }
-    
+
     return bestStreak;
+  }
+
+  /// 连续「自律守护」天数。
+  ///
+  /// 今天还没打卡**不算中断** —— 此时从昨天开始往回数。
+  /// 否则用户每天早上一打开 App 就看到连续天数归零，体验很差。
+  Future<int> getAbstinenceStreak() async {
+    DateTime cursor = DateTime.now();
+    final todayStr = cursor.toIso8601String().split('T').first;
+    final todayRecord = await getCheckIn(todayStr);
+    if (todayRecord == null || !todayRecord.abstinence) {
+      cursor = cursor.subtract(const Duration(days: 1));
+    }
+
+    int days = 0;
+    while (true) {
+      final dateStr = cursor.toIso8601String().split('T').first;
+      final checkIn = await getCheckIn(dateStr);
+      if (checkIn == null || !checkIn.abstinence) break;
+      days++;
+      cursor = cursor.subtract(const Duration(days: 1));
+    }
+    return days;
+  }
+
+  /// 历史最长「自律守护」连续天数（按日期连续性计算）
+  Future<int> getBestAbstinenceStreak() async {
+    final all = await getAllCheckIns(); // date DESC
+    int best = 0;
+    int current = 0;
+    DateTime? previousDate;
+
+    for (final checkIn in all.reversed) { // 升序
+      if (!checkIn.abstinence) {
+        current = 0;
+        previousDate = null;
+        continue;
+      }
+      final date = DateTime.parse(checkIn.date);
+      if (previousDate != null && date.difference(previousDate).inDays == 1) {
+        current++;
+      } else {
+        current = 1;
+      }
+      if (current > best) best = current;
+      previousDate = date;
+    }
+    return best;
   }
 
   /// 获取统计数据

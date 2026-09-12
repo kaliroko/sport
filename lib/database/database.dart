@@ -8,7 +8,7 @@ import 'package:path_provider/path_provider.dart';
 
 class DatabaseHelper {
   static Database? _database;
-  static const int _version = 5;
+  static const int _version = 6;
   static const String _dbName = 'metamorphosis.db';
 
   DatabaseHelper._();
@@ -37,6 +37,7 @@ class DatabaseHelper {
         date TEXT PRIMARY KEY,
         water_ml INTEGER DEFAULT 0,
         water_morning INTEGER DEFAULT 0,
+        abstinence INTEGER DEFAULT 0,
         face_massage_morning INTEGER DEFAULT 0,
         breakfast_healthy INTEGER DEFAULT 0,
         lunch_controlled INTEGER DEFAULT 0,
@@ -217,6 +218,13 @@ class DatabaseHelper {
           updated_at TEXT NOT NULL
         )
       ''');
+    }
+    if (oldVersion < 6) {
+      // v5 → v6: 独立的自律守护打卡（禁欲追踪）。
+      // 刻意独立成一列、而不是加进那 10 项每日任务：
+      // 它不参与完成率与环形图，单独统计自己的连续天数，
+      // 这样既互不干扰，也能给出独立的坚持记录。
+      await _addColumnIfMissing(db, 'daily_check_ins', 'abstinence', 'INTEGER DEFAULT 0');
     }
   }
 

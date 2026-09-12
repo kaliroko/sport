@@ -95,6 +95,28 @@ class CheckInService with ChangeNotifier {
     _notifyChange();
   }
 
+  /// 切换「自律守护」打卡。
+  ///
+  /// 这是**独立追踪器**：不进入 _allTasks()，因此不影响完成率与环形图，
+  /// 也不会被「一键完成」顺带打上 —— 它有自己独立的连续天数统计。
+  Future<void> toggleAbstinence(bool value) async {
+    if (_todayCheckIn == null) return;
+    _todayCheckIn = _todayCheckIn!.copyWith(
+      abstinence: value,
+      updatedAt: DateTime.now(),
+    );
+    await DatabaseManager.checkInRepository.saveCheckIn(_todayCheckIn!);
+    _notifyChange();
+  }
+
+  /// 连续「自律守护」天数（今天还没打卡不算中断）
+  Future<int> getAbstinenceStreak() async =>
+      await DatabaseManager.checkInRepository.getAbstinenceStreak();
+
+  /// 历史最长「自律守护」连续天数
+  Future<int> getBestAbstinenceStreak() async =>
+      await DatabaseManager.checkInRepository.getBestAbstinenceStreak();
+
   /// 切换自定义任务
   Future<void> toggleCustomTask(String taskId, bool value) async {
     if (_todayCheckIn == null) return;

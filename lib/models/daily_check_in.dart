@@ -11,6 +11,11 @@ class DailyCheckIn {
   final String date;
   final int waterMl; // 当日总饮水毫升数（按杯累加）
   final bool waterMorning; // 晨起温水（原来是纯 UI 任务，没有存储列）
+  /// 独立的自律守护打卡（禁欲追踪）。
+  ///
+  /// 刻意**不计入** [_allTasks]/完成率 —— 它是一个独立的追踪器，
+  /// 有自己的连续天数统计，不与那 10 项每日任务互相影响。
+  final bool abstinence;
   final bool faceMassageMorning;
   final bool breakfastHealthy;
   final bool lunchControlled;
@@ -29,6 +34,7 @@ class DailyCheckIn {
     required this.date,
     this.waterMl = 0,
     this.waterMorning = false,
+    this.abstinence = false,
     this.faceMassageMorning = false,
     this.breakfastHealthy = false,
     this.lunchControlled = false,
@@ -101,6 +107,7 @@ class DailyCheckIn {
       waterMl: (map['water_ml'] as int?) ?? 0,
       // 列不存在时返回 null，null == 1 为 false，行为安全
       waterMorning: (map['water_morning'] as int?) == 1,
+      abstinence: (map['abstinence'] as int?) == 1,
       faceMassageMorning: (map['face_massage_morning'] as int?) == 1,
       breakfastHealthy: (map['breakfast_healthy'] as int?) == 1,
       lunchControlled: (map['lunch_controlled'] as int?) == 1,
@@ -123,6 +130,7 @@ class DailyCheckIn {
       'date': date,
       'water_ml': waterMl,
       'water_morning': waterMorning ? 1 : 0,
+      'abstinence': abstinence ? 1 : 0,
       'face_massage_morning': faceMassageMorning ? 1 : 0,
       'breakfast_healthy': breakfastHealthy ? 1 : 0,
       'lunch_controlled': lunchControlled ? 1 : 0,
@@ -143,6 +151,7 @@ class DailyCheckIn {
   DailyCheckIn copyWith({
     int? waterMl,
     bool? waterMorning,
+    bool? abstinence,
     bool? faceMassageMorning,
     bool? breakfastHealthy,
     bool? lunchControlled,
@@ -160,6 +169,7 @@ class DailyCheckIn {
       date: date,
       waterMl: waterMl ?? this.waterMl,
       waterMorning: waterMorning ?? this.waterMorning,
+      abstinence: abstinence ?? this.abstinence,
       faceMassageMorning: faceMassageMorning ?? this.faceMassageMorning,
       breakfastHealthy: breakfastHealthy ?? this.breakfastHealthy,
       lunchControlled: lunchControlled ?? this.lunchControlled,
