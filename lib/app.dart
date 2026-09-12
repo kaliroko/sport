@@ -14,7 +14,7 @@ import 'package:metamorphosis_checkin/screens/onboarding_screen.dart';
 import 'package:metamorphosis_checkin/services/user_profile_service.dart';
 import 'package:metamorphosis_checkin/services/check_in_service.dart';
 import 'package:metamorphosis_checkin/services/workout_service.dart';
-import 'package:metamorphosis_checkin/services/debug_upload_service.dart';
+import 'package:metamorphosis_checkin/services/workout_plan_service.dart';
 import 'package:metamorphosis_checkin/database/app_database.dart';
 
 class MetamorphosisApp extends StatelessWidget {
@@ -27,6 +27,7 @@ class MetamorphosisApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UserProfileService()..init()),
         ChangeNotifierProvider(create: (_) => CheckInService()..init()),
         ChangeNotifierProvider(create: (_) => WorkoutService()..init()),
+        ChangeNotifierProvider(create: (_) => WorkoutPlanService()),
         ChangeNotifierProvider(create: (_) => DebugUploadService()),
       ],
       child: MaterialApp(

@@ -8,7 +8,7 @@ import 'package:path_provider/path_provider.dart';
 
 class DatabaseHelper {
   static Database? _database;
-  static const int _version = 1;
+  static const int _version = 3;
   static const String _dbName = 'metamorphosis.db';
 
   DatabaseHelper._();
@@ -26,6 +26,7 @@ class DatabaseHelper {
       path,
       version: _version,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -34,16 +35,17 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE daily_check_ins (
         date TEXT PRIMARY KEY,
-        water_morning INTEGER DEFAULT 0,
+        water_ml INTEGER DEFAULT 0,
         face_massage_morning INTEGER DEFAULT 0,
         breakfast_healthy INTEGER DEFAULT 0,
         lunch_controlled INTEGER DEFAULT 0,
-        water_2l INTEGER DEFAULT 0,
         no_snacks INTEGER DEFAULT 0,
         dinner_controlled INTEGER DEFAULT 0,
         workout_done INTEGER DEFAULT 0,
         face_massage_night INTEGER DEFAULT 0,
         sleep_before_23 INTEGER DEFAULT 0,
+        custom_tasks TEXT DEFAULT '',
+        mood INTEGER DEFAULT 0,
         note TEXT DEFAULT '',
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
@@ -110,10 +112,65 @@ class DatabaseHelper {
 
     // 打卡索引
     await db.execute('CREATE INDEX idx_checkins_date ON daily_check_ins(date)');
+    // 自定义习惯表
+    await db.execute('''
+      CREATE TABLE custom_tasks (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        icon TEXT DEFAULT '⭐',
+        category TEXT DEFAULT 'other',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+    // 训练计划表
+    await db.execute('''
+      CREATE TABLE workout_plans (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT DEFAULT '',
+        duration_days INTEGER DEFAULT 7,
+        difficulty TEXT DEFAULT 'beginner',
+        schedule TEXT DEFAULT '',
+        created_at TEXT NOT NULL
+      )
+    ''');
     // 运动日志索引
     await db.execute('CREATE INDEX idx_workouts_date ON workout_logs(date)');
     // 身体测量索引
     await db.execute('CREATE INDEX idx_measurements_date ON body_measurements(date)');
+  }
+
+  static Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // v2→v3: water_ml + mood + custom_tasks (handled in v1 schema now, skip for fresh install)
+    }
+    if (oldVersion == 2) {
+      // Legacy migration for existing v2 DBs
+      await db.execute('ALTER TABLE daily_check_ins ADD COLUMN mood INTEGER DEFAULT 0');
+      await db.execute('ALTER TABLE daily_check_ins ADD COLUMN water_ml INTEGER DEFAULT 0');
+      await db.execute('''
+        CREATE TABLE custom_tasks (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          icon TEXT DEFAULT '⭐',
+          category TEXT DEFAULT 'other',
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE workout_plans (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          description TEXT DEFAULT '',
+          duration_days INTEGER DEFAULT 7,
+          difficulty TEXT DEFAULT 'beginner',
+          schedule TEXT DEFAULT '',
+          created_at TEXT NOT NULL
+        )
+      ''');
+    }
   }
 
   static Future<void> close() async {
