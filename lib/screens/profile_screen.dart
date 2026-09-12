@@ -196,6 +196,7 @@ class _ProfileScreenContentState extends State<_ProfileScreenContent> with Autom
             label: '保存',
             isPrimary: true,
             onPressed: () async {
+          bool anyConfirmed = false;
               final name = nameCtrl.text.trim();
               if (name.isEmpty) {
                 if (context.mounted) {
@@ -277,8 +278,6 @@ class _ProfileScreenContentState extends State<_ProfileScreenContent> with Autom
     final sleepCtrl = TextEditingController(text: '22:00');
     bool waterEnabled = false;
     bool sleepEnabled = false;
-    bool waterConfirmed = false;
-    bool sleepConfirmed = false;
 
     await GlassDialog.show<void>(
       context: context,
@@ -317,15 +316,16 @@ class _ProfileScreenContentState extends State<_ProfileScreenContent> with Autom
             label: '保存',
             isPrimary: true,
             onPressed: () async {
+          bool anyConfirmed = false;
               if (waterEnabled) {
                 await notificationService.scheduleWaterReminder(9, 0);
-                setDlgState(() => waterConfirmed = true);
+                anyConfirmed = true;
               }
               if (sleepEnabled) {
                 await notificationService.scheduleDailyReminder(id: 999, title: '早点休息', body: '今晚争取23点前入睡！', time: DateTime.now().add(const Duration(days: 1)).copyWith(hour: 22, minute: 0));
-                setDlgState(() => sleepConfirmed = true);
+                anyConfirmed = true;
               }
-              if (waterConfirmed || sleepConfirmed) {
+              if (anyConfirmed) {
                 Navigator.pop(context);
                 if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('提醒已设置 ✓'), backgroundColor: AppTheme.successColor, behavior: SnackBarBehavior.floating));
               }
