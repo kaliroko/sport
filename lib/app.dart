@@ -14,12 +14,14 @@ import 'package:metamorphosis_checkin/screens/onboarding_screen.dart';
 import 'package:metamorphosis_checkin/screens/appearance_screen.dart';
 import 'package:metamorphosis_checkin/screens/plan_editor_screen.dart';
 import 'package:metamorphosis_checkin/screens/posture_screen.dart';
+import 'package:metamorphosis_checkin/screens/desire_space_screen.dart';
 import 'package:metamorphosis_checkin/services/user_profile_service.dart';
 import 'package:metamorphosis_checkin/services/check_in_service.dart';
 import 'package:metamorphosis_checkin/services/workout_service.dart';
 import 'package:metamorphosis_checkin/services/workout_plan_service.dart';
 import 'package:metamorphosis_checkin/services/debug_upload_service.dart';
 import 'package:metamorphosis_checkin/services/app_settings_service.dart';
+import 'package:metamorphosis_checkin/services/desire_space_service.dart';
 import 'package:metamorphosis_checkin/widgets/app_background.dart';
 import 'package:metamorphosis_checkin/database/app_database.dart';
 
@@ -35,6 +37,7 @@ class MetamorphosisApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => WorkoutService()..init()),
         ChangeNotifierProvider(create: (_) => WorkoutPlanService()..init()),
         ChangeNotifierProvider(create: (_) => AppSettingsService()..init()),
+        ChangeNotifierProvider(create: (_) => DesireSpaceService()..init()),
         ChangeNotifierProvider(create: (_) => DebugUploadService()),
       ],
       child: MaterialApp(
@@ -126,6 +129,7 @@ class _MainScreenState extends State<MainScreen> {
     DietScreen(),
     StatsScreen(),
     ProfileScreen(),
+    DesireSpaceScreen(),
   ];
 
   @override
@@ -199,6 +203,12 @@ class _MainScreenState extends State<MainScreen> {
               icon: Icons.person_outline,
               selectedIcon: Icons.person,
               glowColor: AppTheme.badgeGold,
+            ),
+            GlassBottomBarTab(
+              label: '欲望',
+              icon: Icons.lock_outline,
+              selectedIcon: Icons.lock,
+              glowColor: AppTheme.secondaryColor,
             ),
           ],
           selectedIndex: _selectedIndex,
