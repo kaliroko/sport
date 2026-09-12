@@ -33,6 +33,11 @@ class MetamorphosisApp extends StatelessWidget {
         title: '自律',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.darkTheme,
+        // 注册命名路由，避免 onboarding 跳转时崩溃
+        routes: {
+          '/home': (_) => const MainScreen(),
+          '/onboarding': (_) => const OnboardingScreen(),
+        },
         home: const _AppInitializer(),
       ),
     );
