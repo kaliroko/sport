@@ -196,7 +196,6 @@ class _ProfileScreenContentState extends State<_ProfileScreenContent> with Autom
             label: '保存',
             isPrimary: true,
             onPressed: () async {
-          bool anyConfirmed = false;
               final name = nameCtrl.text.trim();
               if (name.isEmpty) {
                 if (context.mounted) {
@@ -332,7 +331,7 @@ class _ProfileScreenContentState extends State<_ProfileScreenContent> with Autom
             },
           ),
         ],
-      ),
+    );
   }
 
   // ─── 导出数据 ──────────────────────────────────────────────────────────────
