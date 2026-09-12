@@ -58,7 +58,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return AdaptiveLiquidGlassLayer(
-      settings: const LiquidGlassSettings(),
+      settings: const LiquidGlassSettings(blur: 0), // 无用的逐卡模糊，去掉可大幅降 GPU 负载
       quality: GlassQuality.standard,
       blendAmount: 10.0,
       child: Scaffold(
@@ -338,7 +338,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       );
                     }),
                   ),
-                  const Spacer(),
+                  // 这里原先是一个 const Spacer()（即 Expanded）。
+                  // 自 3473ab3 把 Column 放进 SingleChildScrollView 之后，
+                  // 纵向约束变为无界，而 flex 子节点在无界主轴下会直接抛
+                  // RenderFlex 异常，整个引导页无法布局（白屏）。
+                  // 滚动视图里本来就无法“把按钮推到底部”，改用固定间距。
+                  SizedBox(height: ResponsiveUtils.scaleSpacing(context, 24)),
 
                   // 开始按钮
                   GlassButton.custom(

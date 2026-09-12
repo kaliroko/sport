@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:metamorphosis_checkin/utils/constants.dart';
 import 'package:metamorphosis_checkin/theme/app_theme.dart';
+import 'package:metamorphosis_checkin/utils/responsive_utils.dart';
 
 class TaskCard extends StatelessWidget {
   final TaskConfig task;
@@ -22,14 +23,19 @@ class TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 不写死高度：Checkbox 的最小尺寸是 48dp（还要乘 1.2 的缩放），
+    // 固定高度在小屏或系统大字体下会把控件挤出卡片。留空即由内容撑开。
     return GlassCard(
-      height: height ?? 80,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      height: height,
+      padding: EdgeInsets.symmetric(
+        horizontal: ResponsiveUtils.scalePadding(context, 16),
+        vertical: ResponsiveUtils.scalePadding(context, 14),
+      ),
       child: Row(
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: ResponsiveUtils.scaleSize(context, 40),
+            height: ResponsiveUtils.scaleSize(context, 40),
             decoration: BoxDecoration(
               color: isChecked
                   ? AppTheme.checkedColor.withValues(alpha: 0.3)
@@ -39,11 +45,11 @@ class TaskCard extends StatelessWidget {
             child: Center(
               child: Text(
                 task.icon,
-                style: const TextStyle(fontSize: 20),
+                style: TextStyle(fontSize: ResponsiveUtils.scaleIcon(context, 20)),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: ResponsiveUtils.scaleSpacing(context, 12)),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,16 +59,16 @@ class TaskCard extends StatelessWidget {
                   task.name,
                   style: TextStyle(
                     color: isChecked ? AppTheme.checkedColor : AppTheme.textPrimary,
-                    fontSize: 14,
+                    fontSize: ResponsiveUtils.scaleFont(context, 14),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   task.description,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppTheme.textHint,
-                    fontSize: 11,
+                    fontSize: ResponsiveUtils.scaleFont(context, 11),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

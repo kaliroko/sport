@@ -155,7 +155,7 @@ class _WorkoutScreenContentState extends State<_WorkoutScreenContent>
     final currentDay = planService.currentDay;
 
     return AdaptiveLiquidGlassLayer(
-      settings: const LiquidGlassSettings(),
+      settings: const LiquidGlassSettings(blur: 0), // 无用的逐卡模糊，去掉可大幅降 GPU 负载
       quality: GlassQuality.standard,
       blendAmount: 10.0,
       child: CustomScrollView(

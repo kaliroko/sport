@@ -34,7 +34,7 @@ class _DietScreenContentState extends State<_DietScreenContent> with AutomaticKe
   Widget build(BuildContext context) {
     super.build(context);
     return AdaptiveLiquidGlassLayer(
-      settings: const LiquidGlassSettings(),
+      settings: const LiquidGlassSettings(blur: 0), // 无用的逐卡模糊，去掉可大幅降 GPU 负载
       quality: GlassQuality.standard,
       blendAmount: 10.0,
       child: CustomScrollView(

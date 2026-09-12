@@ -34,7 +34,7 @@ class _StatsScreenContentState extends State<_StatsScreenContent> with Automatic
   Widget build(BuildContext context) {
     super.build(context);
     return AdaptiveLiquidGlassLayer(
-      settings: const LiquidGlassSettings(),
+      settings: const LiquidGlassSettings(blur: 0), // 无用的逐卡模糊，去掉可大幅降 GPU 负载
       quality: GlassQuality.standard,
       blendAmount: 10.0,
       child: CustomScrollView(
@@ -90,58 +90,48 @@ class _CheckInCalendar extends StatelessWidget {
     final year = now.year;
     final month = now.month;
 
-    // 本月第一天星期几 (0=周一, 6=周日 → Flutter: 0=周日)
-    final firstDayWeekday = DateTime(year, month, 1).weekday; // 1=周一
+    // DateTime.weekday: 1=周一 … 7=周日，周一作为第 0 列
+    final leading = DateTime(year, month, 1).weekday - 1;
     final daysInMonth = DateTime(year, month + 1, 0).day;
-    final offset = (firstDayWeekday - 1); // 0-indexed, Monday=0
+    // 补齐成整周，行数随月份变化（不再固定 42 格）
+    final totalCells = ((leading + daysInMonth + 6) ~/ 7) * 7;
 
     // 构建打卡数据 map
     final Map<String, double> rateMap = {};
     for (final c in checkIns) rateMap[c.date] = c.completionRate;
 
+    // 按周切分：每行严格 7 格，空位为 null，保证与表头七列对齐。
+    // 原来的 Wrap + 固定 36dp 单元格在不同宽度下每行格数会变（窄屏 6 格、
+    // 宽屏 8 格），与表头的 7 列完全对不上，这里改为 Expanded 七等分。
+    final weeks = <List<DateTime?>>[];
+    for (int start = 0; start < totalCells; start += 7) {
+      weeks.add(List<DateTime?>.generate(7, (i) {
+        final dayOffset = start + i - leading;
+        if (dayOffset < 0 || dayOffset >= daysInMonth) return null;
+        return DateTime(year, month, dayOffset + 1);
+      }));
+    }
+
     final weekdays = ['一', '二', '三', '四', '五', '六', '日'];
-    final dates = <DateTime>[];
-    // 填充前导空位
-    for (int i = 0; i < offset; i++) dates.add(DateTime(year, month, 1 - (offset - i)));
-    for (int d = 1; d <= daysInMonth; d++) dates.add(DateTime(year, month, d));
-    while (dates.length < 42) dates.add(DateTime(year, month, daysInMonth + (dates.length - 1)));
+    final cellSize = ResponsiveUtils.scaleSize(context, 34);
 
     return GlassCard(
       padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 16)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('${year}年${month}月 打卡日历', style: TextStyle(color: Colors.white, fontSize: ResponsiveUtils.scaleFont(context, 16), fontWeight: FontWeight.bold)),
         SizedBox(height: 12),
-        Row(children: weekdays.map((d) => Expanded(child: Center(child: Text(d, style: TextStyle(color: AppTheme.textSecondary, fontSize: 11))))).toList()),
-        SizedBox(height: 4),
-        Wrap(
-          spacing: 4,
-          runSpacing: 4,
-          children: dates.map((dt) {
-            final dayStr = dt.toIso8601String().split('T').first;
-            final rate = rateMap[dayStr];
-            final isToday = dt.year == now.year && dt.month == now.month && dt.day == now.day;
-            final isCurrentMonth = dt.month == month;
-            final hasData = rate != null;
-            Color cellColor;
-            if (!isCurrentMonth) cellColor = Colors.transparent;
-            else if (hasData) {
-              if (rate >= 100) cellColor = AppTheme.successColor.withValues(alpha: 0.7);
-              else if (rate >= 60) cellColor = AppTheme.primaryColor.withValues(alpha: 0.5);
-              else cellColor = AppTheme.errorColor.withValues(alpha: 0.4);
-            } else {
-              cellColor = Colors.white.withValues(alpha: 0.06);
-            }
-            return Container(
-              width: 36, height: 36,
-              decoration: BoxDecoration(
-                color: cellColor,
-                borderRadius: BorderRadius.circular(6),
-                border: isToday ? Border.all(color: Colors.white, width: 2) : null,
-              ),
-              child: Center(child: Text('${dt.day}', style: TextStyle(color: isToday ? Colors.white : AppTheme.textSecondary, fontSize: 11, fontWeight: isToday ? FontWeight.bold : FontWeight.normal))),
-            );
-          }).toList(),
-        ),
+        // 表头
+        Row(children: weekdays.map((d) => Expanded(child: Center(child: Text(d, style: TextStyle(color: AppTheme.textSecondary, fontSize: ResponsiveUtils.scaleFont(context, 11)))))).toList()),
+        SizedBox(height: 6),
+        // 日期网格：固定 7 列，列宽随屏幕自适应
+        ...weeks.map((week) => Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Row(
+            children: week
+                .map((dt) => Expanded(child: Center(child: _buildDayCell(context, dt, now, rateMap, cellSize))))
+                .toList(),
+          ),
+        )),
         SizedBox(height: 10),
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           _LegendDot(color: AppTheme.successColor, label: '100%'),
@@ -153,6 +143,53 @@ class _CheckInCalendar extends StatelessWidget {
           _LegendDot(color: Colors.white.withValues(alpha: 0.2), label: '未打卡'),
         ]),
       ]),
+    );
+  }
+
+  /// 单个日期格子；[dt] 为 null 表示该列属于上/下月的空位。
+  Widget _buildDayCell(
+    BuildContext context,
+    DateTime? dt,
+    DateTime now,
+    Map<String, double> rateMap,
+    double cellSize,
+  ) {
+    if (dt == null) return SizedBox(width: cellSize, height: cellSize);
+
+    final rate = rateMap[dt.toIso8601String().split('T').first];
+    final isToday = dt.year == now.year && dt.month == now.month && dt.day == now.day;
+
+    Color cellColor;
+    if (rate != null) {
+      if (rate >= 100) {
+        cellColor = AppTheme.successColor.withValues(alpha: 0.7);
+      } else if (rate >= 60) {
+        cellColor = AppTheme.primaryColor.withValues(alpha: 0.5);
+      } else {
+        cellColor = AppTheme.errorColor.withValues(alpha: 0.4);
+      }
+    } else {
+      cellColor = Colors.white.withValues(alpha: 0.06);
+    }
+
+    return Container(
+      width: cellSize,
+      height: cellSize,
+      decoration: BoxDecoration(
+        color: cellColor,
+        borderRadius: BorderRadius.circular(6),
+        border: isToday ? Border.all(color: Colors.white, width: 2) : null,
+      ),
+      child: Center(
+        child: Text(
+          '${dt.day}',
+          style: TextStyle(
+            color: isToday ? Colors.white : AppTheme.textSecondary,
+            fontSize: ResponsiveUtils.scaleFont(context, 11),
+            fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      ),
     );
   }
 }

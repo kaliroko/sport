@@ -101,26 +101,44 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return LiquidGlassScope.stack(
-      background: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0a0a1a),
-              Color(0xFF1a1a2e),
-              Color(0xFF16213e),
-            ],
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // 背景渐变。
+        //
+        // 这里刻意不使用 LiquidGlassScope.stack：scope 会把这块全屏背景包进一个
+        // 带 GlobalKey 的 RepaintBoundary，而底部导航栏的玻璃指示器
+        // （AnimatedGlassIndicator → GlassEffect）会在 didChangeDependencies 里
+        // 通过 LiquidGlassScope.of(context) 拿到这个 key。于是每次切换 Tab 的
+        // 600ms 弹簧动画期间，_handleTick 会以 10fps 对**整屏**调用
+        // boundary.toImage(pixelRatio: dpr)（每张都是全分辨率纹理的 GPU 回读，
+        // 属于管线停顿），这是切 Tab 掉帧与发热的主要来源之一。
+        //
+        // 去掉 scope 后 GlassEffect._effectiveKey 恒为 null，捕获循环永不启动
+        // —— glass_effect.dart 的判据是
+        //   interactionIntensity > 0.01 && _effectiveKey != null。
+        // 代价仅是底部指示器失去背景折射采样；它本身已是 blur:0 + 低透明度，
+        // 视觉差异可忽略。
+        const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF0a0a1a),
+                Color(0xFF1a1a2e),
+                Color(0xFF16213e),
+              ],
+            ),
           ),
         ),
-      ),
-      content: Scaffold(
-        backgroundColor: Colors.transparent,
-        extendBody: true,
-        body: _pages[_selectedIndex],
-        bottomNavigationBar: _buildBottomBar(),
-      ),
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          extendBody: true,
+          body: _pages[_selectedIndex],
+          bottomNavigationBar: _buildBottomBar(),
+        ),
+      ],
     );
   }
 

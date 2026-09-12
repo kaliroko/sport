@@ -38,11 +38,41 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
   late Animation<double> _checkAnimation;
   bool _showCelebration = false;
 
+  // 连续打卡 / 最佳记录：由异步查询填充后缓存。
+  // 不能在 build() 里直接插值 Future（会渲染成 "Instance of 'Future<int>'"），
+  // 也不能在 build() 里发起查询（每次重建都会打两次数据库）。
+  int _streak = 0;
+  int _bestStreak = 0;
+
   @override
   void initState() {
     super.initState();
-    _checkController = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
+    // 初始值必须是 1.0：ScaleTransition 的 scale 直接取 _checkAnimation.value，
+    // 而 Md3SpringCurve.transform(0.0) == 0.0。若保持 AnimationController 默认的
+    // 0.0，进度环会被 Transform.scale 缩放到 0 —— 首页刚打开时整块环和中间的
+    // 百分比数字都是不可见的，只有触发庆祝动画后才会出现。
+    _checkController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+      value: 1.0,
+    );
     _checkAnimation = CurvedAnimation(parent: _checkController, curve: const Md3StandardSpring());
+    _loadStreaks();
+  }
+
+  /// 从数据库刷新连续打卡天数（打卡状态变化后调用）
+  Future<void> _loadStreaks() async {
+    if (!mounted) return;
+    final service = context.read<CheckInService>();
+    final results = await Future.wait([
+      service.getConsecutiveDays(),
+      service.getBestStreak(),
+    ]);
+    if (!mounted) return;
+    setState(() {
+      _streak = results[0];
+      _bestStreak = results[1];
+    });
   }
 
   @override
@@ -69,8 +99,12 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
 
   Future<void> _completeAllCheckIn(CheckInService service) async {
     await service.completeAllTasks();
+    await _loadStreaks();
+    if (!mounted) return;
     setState(() => _showCelebration = true);
-    _checkController.forward();
+    // 必须 from: 0 —— 控制器平时停在 1.0，无参 forward() 在已达上界时是空操作，
+    // 会导致第二次及以后的庆祝动画完全不播放。
+    _checkController.forward(from: 0);
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _showCelebration = false);
     });
@@ -82,16 +116,22 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
     final service = context.watch<CheckInService>();
     final today = DateTime.now();
     final dateStr = '${today.year}年${today.month}月${today.day}日';
-    final weekday = ['日', '一', '二', '三', '四', '五', '六'][today.weekday];
+    // DateTime.weekday: 1=周一 … 7=周日，必须减 1 再索引；
+    // 原写法 [today.weekday] 在周日（7）会越界抛 RangeError 导致首页白屏。
+    final weekday = ['一', '二', '三', '四', '五', '六', '日'][today.weekday - 1];
     final isAllComplete = service.completionRate >= 100;
     final checkedCount = AppConstants.dailyTasks
         .where((t) => _isTaskChecked(service, t.id))
         .length;
 
     return Stack(
+      // 显式声明撑满。默认的 StackFit.loose 会给非定位子节点下发松约束，
+      // 当前只是靠 RenderViewport 自己取 constraints.biggest 才没塌陷，
+      // 属于隐式依赖；换成 expand 后语义明确，也不会被后续改动破坏。
+      fit: StackFit.expand,
       children: [
         AdaptiveLiquidGlassLayer(
-          settings: const LiquidGlassSettings(),
+          settings: const LiquidGlassSettings(blur: 0), // 见 app.dart 说明：省掉每张卡一个 BackdropFilter 层
           quality: GlassQuality.standard,
           blendAmount: 10.0,
           child: CustomScrollView(
@@ -141,8 +181,10 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                                 scale: _checkAnimation,
                                 child: ProgressRing(
                                   progress: service.completionRate,
-                                  size: ResponsiveUtils.scaleFont(context, 88),
-                                  strokeWidth: ResponsiveUtils.scaleFont(context, 7),
+                                  // 环形图尺寸与线宽都是几何尺寸，用 scaleSize
+                                  // 等比缩放（不套用 8.0 字号下限）。
+                                  size: ResponsiveUtils.scaleSize(context, 88),
+                                  strokeWidth: ResponsiveUtils.scaleSize(context, 7),
                                   foregroundColor: isAllComplete ? AppTheme.successColor : AppTheme.primaryColor,
                                   labelText: '${service.completionRate.round()}%',
                                 ),
@@ -152,7 +194,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    _StatRow(icon: Icons.local_fire_department, iconColor: AppTheme.warningColor, label: '连续打卡', value: '${service.getConsecutiveDays()}天', sub: '最佳 ${service.getBestStreak()}天'),
+                                    _StatRow(icon: Icons.local_fire_department, iconColor: AppTheme.warningColor, label: '连续打卡', value: '$_streak天', sub: '最佳 $_bestStreak天'),
                                     SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
                                     _StatRow(icon: Icons.check_circle, iconColor: AppTheme.successColor, label: '今日完成', value: '$checkedCount / ${AppConstants.dailyTasks.length}', sub: isAllComplete ? '全部达成 ✅' : '还差 ${AppConstants.dailyTasks.length - checkedCount}项'),
                                   ],
@@ -188,14 +230,18 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                       final isChecked = _isTaskChecked(service, task.id);
                       return Padding(
                         padding: EdgeInsets.only(bottom: ResponsiveUtils.scaleSpacing(context, 10)),
-                        child: TaskCard(height: 80, task: task, isChecked: isChecked, onToggle: () {
-                          service.toggleTask(task.id, !isChecked);
+                        child: TaskCard(task: task, isChecked: isChecked, onToggle: () async {
+                          await service.toggleTask(task.id, !isChecked);
+                          await _loadStreaks();
+                          if (!mounted) return;
                           if (!isChecked) {
                             _showTaskSuccess(context, task.name);
                             final remaining = AppConstants.dailyTasks.where((t) => !_isTaskChecked(service, t.id)).length;
                             if (remaining == 0) {
                               setState(() => _showCelebration = true);
-                              _checkController.forward();
+                              // 必须 from: 0 —— 控制器平时停在 1.0，无参 forward() 在已达上界时是空操作，
+    // 会导致第二次及以后的庆祝动画完全不播放。
+    _checkController.forward(from: 0);
                               Future.delayed(const Duration(seconds: 2), () {
                                 if (mounted) setState(() => _showCelebration = false);
                               });
@@ -308,14 +354,30 @@ class _StatRow extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
+    // 关键：Row 中的非 flex 子节点会拿到无界的主轴约束（maxWidth: infinity），
+    // 里面的 Text 因此既不换行也不省略，文字一长就直接水平溢出。
+    // 用 Expanded 约束列宽，并给每个 Text 加 maxLines + ellipsis 兜底。
+    // 尺寸也补上响应式缩放——这里是首页唯一一处原先硬编码字号的组件，
+    // 会导致左侧进度环缩小而文字不缩，小屏上比例失调。
     return Row(children: [
-      Icon(icon, color: iconColor, size: 18),
-      SizedBox(width: 6),
-      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, style: TextStyle(color: AppTheme.textSecondary, fontSize: 11)),
-        Text(value, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-        Text(sub, style: TextStyle(color: AppTheme.textHint, fontSize: 10)),
-      ]),
+      Icon(icon, color: iconColor, size: ResponsiveUtils.scaleIcon(context, 18)),
+      SizedBox(width: ResponsiveUtils.scaleSpacing(context, 6)),
+      Expanded(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: ResponsiveUtils.scaleFont(context, 11))),
+          Text(value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: Colors.white, fontSize: ResponsiveUtils.scaleFont(context, 14), fontWeight: FontWeight.bold)),
+          Text(sub,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: AppTheme.textHint, fontSize: ResponsiveUtils.scaleFont(context, 10))),
+        ]),
+      ),
     ]);
   }
 }
@@ -386,7 +448,9 @@ class _WaterTracker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final waterMl = service.todayCheckIn?.waterMl ?? 0;
-    final progress = (waterMl / goalMl * 100).clamp(0.0, 1.0);
+    // LinearProgressIndicator 要的是 0.0~1.0 的比例；
+    // 原写法先 ×100 再按 0~1 clamp，导致喝一杯就满格。
+    final progress = (waterMl / goalMl).clamp(0.0, 1.0);
     return GlassCard(
       padding: EdgeInsets.symmetric(horizontal: ResponsiveUtils.scalePadding(context, 16), vertical: 14),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -441,8 +505,13 @@ class _CustomTaskCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassCard(
-      height: 64,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      // 不再写死 height: 64。IconButton 的最小可点区域是 48dp，
+      // 加上上下 padding 至少需要 72dp，固定 64 会把删除图标挤到卡片外。
+      // 交给内容自适应高度，小屏或系统大字体下都不会裁切。
+      padding: EdgeInsets.symmetric(
+        horizontal: ResponsiveUtils.scalePadding(context, 16),
+        vertical: ResponsiveUtils.scalePadding(context, 12),
+      ),
       child: Row(
         children: [
           Container(width: 36, height: 36, decoration: BoxDecoration(color: isChecked ? AppTheme.checkedColor.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),

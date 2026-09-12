@@ -35,7 +35,7 @@ class _ProfileScreenContentState extends State<_ProfileScreenContent> with Autom
   Widget build(BuildContext context) {
     super.build(context);
     return AdaptiveLiquidGlassLayer(
-      settings: const LiquidGlassSettings(),
+      settings: const LiquidGlassSettings(blur: 0), // 无用的逐卡模糊，去掉可大幅降 GPU 负载
       quality: GlassQuality.standard,
       blendAmount: 10.0,
       child: CustomScrollView(
@@ -988,8 +988,11 @@ class _DebugPanelDialogState extends State<_DebugPanelDialog> {
       backgroundColor: const Color(0xFF1a1a2e),
       title: const Text('调试面板', style: TextStyle(color: Colors.white)),
       content: SizedBox(
-        width: 320,
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+        // 用 maxFinite 撑满可用宽度，而不是写死 320：
+        // 在 320dp 宽的小屏上，固定 320 会超出对话框可用宽度。
+        width: double.maxFinite,
+        child: SingleChildScrollView(
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('服务器地址:', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
           const SizedBox(height: 8),
           TextField(
@@ -1009,7 +1012,8 @@ class _DebugPanelDialogState extends State<_DebugPanelDialog> {
               style: TextStyle(color: service.lastStatus.contains('成功') ? AppTheme.successColor : service.lastStatus.contains('失败') ? AppTheme.errorColor : AppTheme.textSecondary, fontSize: 12),
             ),
           ),
-        ]),
+          ]),
+        ),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消', style: TextStyle(color: AppTheme.textSecondary))),

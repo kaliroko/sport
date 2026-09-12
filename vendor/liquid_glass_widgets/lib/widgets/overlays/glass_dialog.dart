@@ -338,8 +338,16 @@ class GlassDialog extends StatelessWidget {
                 ],
 
                 // Custom content
+                //
+                // 让内容区可滚动（本地补丁）：标题和操作按钮保持固定在
+                // 上下两端，内容超出一屏时可上下滑动。小屏 / 矮屏 / 横屏 /
+                // 键盘弹出时，对话框不会再因内容过高而溢出屏幕。
                 if (content != null) ...[
-                  content!,
+                  Flexible(
+                    child: SingleChildScrollView(
+                      child: content!,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                 ],
 
