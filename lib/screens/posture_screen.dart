@@ -32,7 +32,7 @@ class _PostureMove {
 class _PostureRoutine {
   final String title;
   final String subtitle;
-  final String emoji;
+  final IconData emoji;
   final List<_PostureMove> moves;
   const _PostureRoutine({required this.title, required this.subtitle, required this.emoji, required this.moves});
 }
@@ -41,7 +41,7 @@ const List<_PostureRoutine> _routines = [
   _PostureRoutine(
     title: '课间 5 分钟',
     subtitle: '久坐之后立刻做，缓解圆肩与含胸',
-    emoji: '🧍',
+    emoji: Icons.accessibility_new,
     moves: [
       _PostureMove(
         name: '胸椎伸展',
@@ -73,7 +73,7 @@ const List<_PostureRoutine> _routines = [
   _PostureRoutine(
     title: '睡前 8 分钟',
     subtitle: '放松肩颈，改善含胸与颈部紧张',
-    emoji: '🌙',
+    emoji: Icons.bedtime_outlined,
     moves: [
       _PostureMove(
         name: '猫牛式',
@@ -142,7 +142,7 @@ class _PostureScreenState extends State<PostureScreen> {
           _activeMove = null;
         });
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('${move.name} 完成 ✅'),
+          content: Text('${move.name} 完成'),
           backgroundColor: AppTheme.successColor,
           behavior: SnackBarBehavior.floating,
         ));
@@ -208,7 +208,7 @@ class _PostureScreenState extends State<PostureScreen> {
                 padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 16)),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Row(children: [
-                    Text('🧍', style: TextStyle(fontSize: ResponsiveUtils.scaleIcon(context, 22))),
+                    Icon(Icons.accessibility_new, color: AppTheme.primaryColor, size: ResponsiveUtils.scaleIcon(context, 22)),
                     SizedBox(width: ResponsiveUtils.scaleSpacing(context, 8)),
                     Expanded(child: Text('为什么练体态', style: TextStyle(color: Colors.white, fontSize: ResponsiveUtils.scaleFont(context, 15), fontWeight: FontWeight.bold))),
                   ]),
@@ -270,7 +270,7 @@ class _RoutineCard extends StatelessWidget {
       padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 16)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Text(routine.emoji, style: TextStyle(fontSize: ResponsiveUtils.scaleIcon(context, 20))),
+          Icon(routine.emoji, color: AppTheme.primaryColor, size: ResponsiveUtils.scaleIcon(context, 20)),
           SizedBox(width: ResponsiveUtils.scaleSpacing(context, 8)),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(routine.title, style: TextStyle(color: Colors.white, fontSize: ResponsiveUtils.scaleFont(context, 15), fontWeight: FontWeight.bold)),

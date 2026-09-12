@@ -205,27 +205,27 @@ class _WorkoutScreenContentState extends State<_WorkoutScreenContent>
 
   Widget _buildRestDayContent() {
     final suggestions = [
-      '今天好好休息，肌肉在恢复中变强 💪',
+      '今天好好休息，肌肉在恢复中变强',
       '可以散步15分钟，促进血液循环',
       '做10分钟拉伸，保持身体灵活性',
-      '今晚早点睡，保证8小时睡眠 😴',
+      '今晚早点睡，保证8小时睡眠',
     ];
     final dayOfWeek = DateTime.now().weekday;
     return GlassCard(
       padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 24)),
       child: Column(children: [
-        Text('😴', style: TextStyle(fontSize: ResponsiveUtils.scaleFont(context, 48))),
+        Icon(Icons.bedtime_outlined, color: AppTheme.infoColor, size: ResponsiveUtils.scaleIcon(context, 48)),
         SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16)),
         Text('今日建议：${suggestions[(dayOfWeek - 1) % suggestions.length]}', style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
         SizedBox(height: 8),
         Text('休息日同样重要！良好的恢复让训练效果更好', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13), textAlign: TextAlign.center),
         SizedBox(height: 16),
         Row(children: [
-          _RestSuggestionTile(icon: '🚶', text: '散步15分钟'),
+          _RestSuggestionTile(icon: Icons.directions_walk, text: '散步15分钟'),
           SizedBox(width: 12),
-          _RestSuggestionTile(icon: '🧘', text: '拉伸10分钟'),
+          _RestSuggestionTile(icon: Icons.self_improvement, text: '拉伸10分钟'),
           SizedBox(width: 12),
-          _RestSuggestionTile(icon: '😴', text: '早睡'),
+          _RestSuggestionTile(icon: Icons.bedtime_outlined, text: '早睡'),
         ]),
       ]),
     );
@@ -272,7 +272,7 @@ Future<void> _showPlanSelector(BuildContext context, WorkoutPlanService planServ
 
 // ─── 休息日建议卡片 ────────────────────────────────────────────────────────────
 class _RestSuggestionTile extends StatelessWidget {
-  final String icon;
+  final IconData icon;
   final String text;
   const _RestSuggestionTile({required this.icon, required this.text});
   @override
@@ -280,7 +280,7 @@ class _RestSuggestionTile extends StatelessWidget {
     return Expanded(child: Container(
       padding: EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(color: AppTheme.infoColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
-      child: Column(children: [Text(icon, style: TextStyle(fontSize: 20)), SizedBox(height: 4), Text(text, style: TextStyle(color: AppTheme.infoColor, fontSize: 11))]),
+      child: Column(children: [Icon(icon, color: AppTheme.infoColor, size: ResponsiveUtils.scaleIcon(context, 20)), SizedBox(height: 4), Text(text, style: TextStyle(color: AppTheme.infoColor, fontSize: 11))]),
     ));
   }
 }
@@ -446,7 +446,7 @@ class _TrainingProgressBar extends StatelessWidget {
         ),
         if (finished) ...[
           SizedBox(height: ResponsiveUtils.scaleSpacing(context, 6)),
-          Text('全部完成，已自动同步到首页「运动完成」打卡 ✅',
+          Text('全部完成，已自动同步到首页「运动完成」打卡',
               style: TextStyle(color: AppTheme.successColor, fontSize: ResponsiveUtils.scaleFont(context, 11))),
         ],
       ]),

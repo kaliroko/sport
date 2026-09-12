@@ -300,13 +300,15 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 20)),
       children: [
         SizedBox(height: ResponsiveUtils.scaleSpacing(context, 40)),
-        Center(child: Text(allDone ? '🎉' : '🕐', style: TextStyle(fontSize: ResponsiveUtils.scaleFont(context, 64)))),
+        Center(child: Icon(allDone ? Icons.check_circle : Icons.timelapse,
+            color: allDone ? AppTheme.successColor : AppTheme.textHint,
+            size: ResponsiveUtils.scaleIcon(context, 56))),
         SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16)),
         Center(child: Text(allDone ? '今日训练完成！' : '本次训练已结束',
             style: TextStyle(color: Colors.white, fontSize: ResponsiveUtils.scaleFont(context, 24), fontWeight: FontWeight.bold))),
         SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
         Center(child: Text(
-          allDone ? '已自动同步到首页「运动完成」打卡 ✅' : '还有动作没做满，可以再进来继续',
+          allDone ? '已自动同步到首页「运动完成」打卡' : '还有动作没做满，可以再进来继续',
           textAlign: TextAlign.center,
           style: TextStyle(color: allDone ? AppTheme.successColor : AppTheme.textSecondary, fontSize: ResponsiveUtils.scaleFont(context, 13)),
         )),

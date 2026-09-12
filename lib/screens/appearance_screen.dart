@@ -177,7 +177,7 @@ class AppearanceScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      const Text('预览：今天也要加油哦！💪'),
+                      const Text('预览：今天也要加油哦！'),
                       const SizedBox(height: 4),
                       Text('坚持就是胜利，你已经很棒了！',
                           style: TextStyle(color: AppTheme.textSecondary)),

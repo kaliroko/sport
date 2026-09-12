@@ -327,7 +327,7 @@ class _ProfileScreenContentState extends State<_ProfileScreenContent> with Autom
               }
               if (anyConfirmed) {
                 Navigator.pop(context);
-                if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('提醒已设置 ✓'), backgroundColor: AppTheme.successColor, behavior: SnackBarBehavior.floating));
+                if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('提醒已设置'), backgroundColor: AppTheme.successColor, behavior: SnackBarBehavior.floating));
               }
             },
           ),

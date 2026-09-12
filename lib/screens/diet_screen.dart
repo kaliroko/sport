@@ -172,25 +172,25 @@ class _MealSuggestionsCard extends StatelessWidget {
           SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16)),
           _MealItem(
             time: '早餐',
-            icon: '🌅',
+            icon: Icons.wb_twilight,
             content: '必须包含：1个鸡蛋 + 1杯牛奶/无糖豆浆 + 主食（玉米半根/全麦面包1片）\n禁止：油条、煎饼、手抓饼、含糖饮料',
           ),
           Divider(color: AppTheme.textHint),
           _MealItem(
             time: '午餐',
-            icon: '☀️',
+            icon: Icons.wb_sunny_outlined,
             content: '按口诀打菜：一拳头米饭 + 一掌心瘦肉/鸡蛋/豆腐 + 两拳头蔬菜\n太油的菜用水涮一下',
           ),
           Divider(color: AppTheme.textHint),
           _MealItem(
             time: '晚餐',
-            icon: '🌙',
+            icon: Icons.nights_stay_outlined,
             content: '参照午餐原则，主食减半或换成玉米/红薯，多吃蔬菜，少油少盐\n七分饱，不吃夜宵',
           ),
           Divider(color: AppTheme.textHint),
           _MealItem(
             time: '加餐',
-            icon: '🍎',
+            icon: Icons.lunch_dining,
             content: '如果饿，只吃：半根黄瓜 / 1个水煮蛋 / 1小杯无糖酸奶（三选一）\n禁止：辣条、饼干、面包、饮料',
           ),
         ],
@@ -201,7 +201,7 @@ class _MealSuggestionsCard extends StatelessWidget {
 
 class _MealItem extends StatelessWidget {
   final String time;
-  final String icon;
+  final IconData icon;
   final String content;
 
   const _MealItem({
@@ -217,7 +217,7 @@ class _MealItem extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(icon, style: TextStyle(fontSize: ResponsiveUtils.scaleIcon(context, 20))),
+          Icon(icon, color: AppTheme.primaryColor, size: ResponsiveUtils.scaleIcon(context, 20)),
           SizedBox(width: ResponsiveUtils.scaleSpacing(context, 12)),
           Expanded(
             child: Column(
@@ -270,7 +270,7 @@ class _FoodTrafficLightCard extends StatelessWidget {
 
           // 绿灯食物
           _FoodCategory(
-            title: '绿灯食物 ✅',
+            title: '绿灯食物',
             color: AppTheme.successColor,
             foods: AppConstants.greenLightFoods.map((f) => f.name).toList(),
           ),
@@ -278,7 +278,7 @@ class _FoodTrafficLightCard extends StatelessWidget {
 
           // 红灯食物
           _FoodCategory(
-            title: '红灯食物 ❌',
+            title: '红灯食物',
             color: AppTheme.errorColor,
             foods: AppConstants.redLightFoods.map((f) => f.name).toList(),
           ),

@@ -165,11 +165,11 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                           ],
                         ),
                         SizedBox(height: ResponsiveUtils.scaleSpacing(context, 6)),
-                        Text('今天也要加油哦！💪', style: TextStyle(color: Colors.white, fontSize: ResponsiveUtils.scaleFont(context, 24), fontWeight: FontWeight.bold)),
+                        Text('今天也要加油哦！', style: TextStyle(color: Colors.white, fontSize: ResponsiveUtils.scaleFont(context, 24), fontWeight: FontWeight.bold)),
                         if (!isAllComplete)
                           Text('坚持就是胜利，你已经很棒了！', style: TextStyle(color: AppTheme.textSecondary, fontSize: ResponsiveUtils.scaleFont(context, 13)))
                         else
-                          Text('太棒了！今日目标全部达成 🎉', style: TextStyle(color: AppTheme.successColor, fontSize: ResponsiveUtils.scaleFont(context, 13), fontWeight: FontWeight.w600)),
+                          Text('太棒了！今日目标全部达成', style: TextStyle(color: AppTheme.successColor, fontSize: ResponsiveUtils.scaleFont(context, 13), fontWeight: FontWeight.w600)),
                         SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16)),
 
                         // ─── 心情选择器 ───
@@ -204,7 +204,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                                   children: [
                                     _StatRow(icon: Icons.local_fire_department, iconColor: AppTheme.warningColor, label: '连续打卡', value: '$_streak天', sub: '最佳 $_bestStreak天'),
                                     SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
-                                    _StatRow(icon: Icons.check_circle, iconColor: AppTheme.successColor, label: '今日完成', value: '$checkedCount / ${AppConstants.dailyTasks.length}', sub: isAllComplete ? '全部达成 ✅' : '还差 ${AppConstants.dailyTasks.length - checkedCount}项'),
+                                    _StatRow(icon: Icons.check_circle, iconColor: AppTheme.successColor, label: '今日完成', value: '$checkedCount / ${AppConstants.dailyTasks.length}', sub: isAllComplete ? '全部达成' : '还差 ${AppConstants.dailyTasks.length - checkedCount}项'),
                                   ],
                                 ),
                               ),
@@ -219,7 +219,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                             onTap: () => _completeAllCheckIn(service),
                             width: double.infinity,
                             height: ResponsiveUtils.scaleButtonHeight(context, 48),
-                            child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Text('✨ 一键完成今日打卡', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600))]),
+                            child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Text('一键完成今日打卡', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600))]),
                           ),
                         SizedBox(height: ResponsiveUtils.scaleSpacing(context, 12)),
 
@@ -326,7 +326,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                 return Transform.scale(scale: _checkAnimation.value, child: GlassCard(
                   padding: EdgeInsets.symmetric(horizontal: ResponsiveUtils.scalePadding(context, 40), vertical: ResponsiveUtils.scalePadding(context, 32)),
                   child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    Text('🎉', style: TextStyle(fontSize: ResponsiveUtils.scaleFont(context, 64))),
+                    Icon(Icons.check_circle, color: AppTheme.successColor, size: ResponsiveUtils.scaleIcon(context, 56)),
                     SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16)),
                     Text('今日打卡完成！', style: TextStyle(color: Colors.white, fontSize: ResponsiveUtils.scaleFont(context, 24), fontWeight: FontWeight.bold), textAlign: TextAlign.center),
                     SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
@@ -499,7 +499,7 @@ class _WaterTracker extends StatelessWidget {
               Text('饮水记录', style: TextStyle(color: AppTheme.textSecondary, fontSize: ResponsiveUtils.scaleFont(context, 12))),
               if (done) ...[
                 SizedBox(width: ResponsiveUtils.scaleSpacing(context, 6)),
-                Text('已达标 ✅', style: TextStyle(color: AppTheme.successColor, fontSize: ResponsiveUtils.scaleFont(context, 11), fontWeight: FontWeight.w600)),
+                Text('已达标', style: TextStyle(color: AppTheme.successColor, fontSize: ResponsiveUtils.scaleFont(context, 11), fontWeight: FontWeight.w600)),
               ],
             ]),
             Text('$waterMl / $goalMl ml', style: TextStyle(color: Colors.white, fontSize: ResponsiveUtils.scaleFont(context, 13), fontWeight: FontWeight.w600)),
@@ -542,7 +542,8 @@ class _WaterTracker extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(filled ? '✓' : '💧', style: TextStyle(fontSize: ResponsiveUtils.scaleIcon(context, 14))),
+                    // 空杯只靠边框表示，不再额外塞一个 💧
+                    Text(filled ? '✓' : '', style: TextStyle(fontSize: ResponsiveUtils.scaleIcon(context, 14))),
                     const SizedBox(height: 2),
                     // 直接显示真实毫升数，不再用整除拼字符串
                     Text('${cupIndex * cupMl}',
@@ -628,7 +629,7 @@ class _AbstinenceCard extends StatelessWidget {
                   ),
                 ]),
                 SizedBox(height: ResponsiveUtils.scaleSpacing(context, 2)),
-                Text(done ? '今日已打卡，继续坚持 💪' : '独立追踪，不影响上方完成率',
+                Text(done ? '今日已打卡，继续坚持' : '独立追踪，不影响上方完成率',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -648,7 +649,7 @@ class _AbstinenceCard extends StatelessWidget {
               onChanged();
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(wasDone ? '已取消今日打卡' : '今日自律守护打卡成功 🛡'),
+                content: Text(wasDone ? '已取消今日打卡' : '今日自律守护打卡成功'),
                 backgroundColor: wasDone ? AppTheme.infoColor : AppTheme.successColor,
                 behavior: SnackBarBehavior.floating,
               ));

@@ -251,7 +251,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 16)),
                           child: Column(
                             children: [
-                              Text('🏠', style: TextStyle(fontSize: ResponsiveUtils.scaleIcon(context, 32))),
+                              Icon(Icons.home_outlined, color: Colors.white, size: ResponsiveUtils.scaleIcon(context, 32)),
                               SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
                               Text(
                                 '走读',
@@ -271,7 +271,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 16)),
                           child: Column(
                             children: [
-                              Text('🏫', style: TextStyle(fontSize: ResponsiveUtils.scaleIcon(context, 32))),
+                              Icon(Icons.school_outlined, color: Colors.white, size: ResponsiveUtils.scaleIcon(context, 32)),
                               SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
                               Text(
                                 '住校',
