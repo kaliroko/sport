@@ -21,11 +21,20 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
-class _ProfileScreenContent extends StatelessWidget {
+class _ProfileScreenContent extends StatefulWidget {
   const _ProfileScreenContent();
 
   @override
+  State<_ProfileScreenContent> createState() => _ProfileScreenContentState();
+}
+
+class _ProfileScreenContentState extends State<_ProfileScreenContent> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => false;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     return AdaptiveLiquidGlassLayer(
       settings: const LiquidGlassSettings(),
       quality: GlassQuality.standard,

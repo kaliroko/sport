@@ -19,11 +19,20 @@ class DietScreen extends StatelessWidget {
   }
 }
 
-class _DietScreenContent extends StatelessWidget {
+class _DietScreenContent extends StatefulWidget {
   const _DietScreenContent();
 
   @override
+  State<_DietScreenContent> createState() => _DietScreenContentState();
+}
+
+class _DietScreenContentState extends State<_DietScreenContent> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => false;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     return AdaptiveLiquidGlassLayer(
       settings: const LiquidGlassSettings(),
       quality: GlassQuality.standard,
