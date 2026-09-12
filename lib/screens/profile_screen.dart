@@ -154,40 +154,40 @@ class _ProfileScreenContentState extends State<_ProfileScreenContent> with Autom
       context: context,
       title: '编辑资料',
       content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _EditField(controller: nameCtrl, label: '昵称', icon: Icons.badge),
-            SizedBox(height: 12),
-            _EditField(controller: ageCtrl, label: '年龄', icon: Icons.cake),
-            SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _EditField(controller: heightCtrl, label: '身高(cm)', icon: Icons.height),
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _EditField(controller: nameCtrl, label: '昵称', icon: Icons.badge),
+          SizedBox(height: 12),
+          _EditField(controller: ageCtrl, label: '年龄', icon: Icons.cake),
+          SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _EditField(controller: heightCtrl, label: '身高(cm)', icon: Icons.height),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: _EditField(controller: weightCtrl, label: '体重(kg)', icon: Icons.monitor_weight),
+              ),
+            ],
+          ),
+          SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _ChipSelector<String>(
+                  label: '状态',
+                  selected: profile.schoolType == SchoolType.boarder ? '住校' : '走读',
+                  options: const ['走读', '住校'],
+                  onSelected: (v) {},
                 ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: _EditField(controller: weightCtrl, label: '体重(kg)', icon: Icons.monitor_weight),
-                ),
-              ],
-            ),
-            SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _ChipSelector<String>(
-                    label: '状态',
-                    selected: profile.schoolType == SchoolType.boarder ? '住校' : '走读',
-                    options: const ['走读', '住校'],
-                    onSelected: (v) {},
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        actions: [
+              ),
+            ],
+          ),
+        ],
+      ),
+      actions: [
           GlassDialogAction(
             label: '取消',
             onPressed: () => Navigator.pop(context),
@@ -223,7 +223,6 @@ class _ProfileScreenContentState extends State<_ProfileScreenContent> with Autom
             },
           ),
         ],
-      ),
     );
   }
 
@@ -260,7 +259,6 @@ class _ProfileScreenContentState extends State<_ProfileScreenContent> with Autom
           GlassDialogAction(label: '取消', onPressed: () => Navigator.pop(context)),
           GlassDialogAction(label: '确认', isPrimary: true, onPressed: () => Navigator.pop(context, currentWeek)),
         ],
-      ),
     );
     if (week != null && context.mounted) {
       await context.read<UserProfileService>().updateWeek(week);
@@ -312,8 +310,7 @@ class _ProfileScreenContentState extends State<_ProfileScreenContent> with Autom
               ],
             ],
           ),
-        ),
-        actions: [
+      actions: [
           GlassDialogAction(label: '取消', onPressed: () => Navigator.pop(context)),
           GlassDialogAction(
             label: '保存',
@@ -339,11 +336,11 @@ class _ProfileScreenContentState extends State<_ProfileScreenContent> with Autom
   }
 
   // ─── 导出数据 ──────────────────────────────────────────────────────────────
-  void _showExportDialog(BuildContext context) {
-    GlassDialog.show<void>(
+  Future<void> _showExportDialog(BuildContext context) async {
+    await GlassDialog.show<void>(
       context: context,
       title: '导出数据',
-        content: Column(
+      content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -354,18 +351,17 @@ class _ProfileScreenContentState extends State<_ProfileScreenContent> with Autom
             _ExportOption(icon: Icons.picture_as_pdf, title: '导出为 PDF', desc: '打印友好格式'),
           ],
         ),
-        actions: [
-          GlassDialogAction(label: '取消', onPressed: () => Navigator.pop(context)),
-          GlassDialogAction(label: 'CSV', isPrimary: true, onPressed: () {
-            Navigator.pop(context);
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('CSV 导出功能开发中...'), backgroundColor: AppTheme.infoColor, behavior: SnackBarBehavior.floating),
-              );
-            }
-          }),
-        ],
-      ),
+      actions: [
+        GlassDialogAction(label: '取消', onPressed: () => Navigator.pop(context)),
+        GlassDialogAction(label: 'CSV', isPrimary: true, onPressed: () {
+          Navigator.pop(context);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('CSV 导出功能开发中...'), backgroundColor: AppTheme.infoColor, behavior: SnackBarBehavior.floating),
+            );
+          }
+        }),
+      ],
     );
   }
 
