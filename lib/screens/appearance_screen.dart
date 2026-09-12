@@ -114,6 +114,99 @@ class AppearanceScreen extends StatelessWidget {
               ),
               SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16)),
 
+              // ─── 文字大小 ───
+              GlassCard(
+                padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 16)),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('文字大小', style: TextStyle(color: Colors.white, fontSize: ResponsiveUtils.scaleFont(context, 16), fontWeight: FontWeight.bold)),
+                  SizedBox(height: ResponsiveUtils.scaleSpacing(context, 6)),
+                  Text(
+                    '统一放大或缩小全 App 的文字，会叠加在系统的无障碍字号之上。',
+                    style: TextStyle(color: AppTheme.textSecondary, fontSize: ResponsiveUtils.scaleFont(context, 12)),
+                  ),
+                  SizedBox(height: ResponsiveUtils.scaleSpacing(context, 12)),
+
+                  // 档位选择
+                  Row(
+                    children: List.generate(AppSettingsService.textScaleOptions.length, (i) {
+                      final option = AppSettingsService.textScaleOptions[i];
+                      final selected = (settings.textScale - option).abs() < 0.01;
+                      final isLast = i == AppSettingsService.textScaleOptions.length - 1;
+                      return Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            right: isLast ? 0 : ResponsiveUtils.scaleSpacing(context, 8),
+                          ),
+                          child: GestureDetector(
+                            onTap: () => settings.setTextScale(option),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(vertical: ResponsiveUtils.scalePadding(context, 10)),
+                              decoration: BoxDecoration(
+                                color: selected
+                                    ? AppTheme.primaryColor.withValues(alpha: 0.3)
+                                    : Colors.white.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: selected ? AppTheme.primaryColor : Colors.transparent),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  AppSettingsService.textScaleLabels[i],
+                                  style: TextStyle(
+                                    color: selected ? Colors.white : AppTheme.textSecondary,
+                                    fontSize: ResponsiveUtils.scaleFont(context, 13),
+                                    fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+
+                  SizedBox(height: ResponsiveUtils.scaleSpacing(context, 12)),
+
+                  // 实时预览：用固定的基准字号展示，不受当前倍率影响，
+                  // 否则调一次预览也跟着变大，看不出相对变化。
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 12)),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      const Text('预览：今天也要加油哦！💪'),
+                      const SizedBox(height: 4),
+                      Text('坚持就是胜利，你已经很棒了！',
+                          style: TextStyle(color: AppTheme.textSecondary)),
+                      const SizedBox(height: 4),
+                      Text('连续打卡 7 天 · 完成率 90%',
+                          style: TextStyle(color: AppTheme.textHint)),
+                    ]),
+                  ),
+
+                  SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    Text('当前倍率', style: TextStyle(color: AppTheme.textSecondary, fontSize: ResponsiveUtils.scaleFont(context, 12))),
+                    Text('${(settings.textScale * 100).round()}%',
+                        style: TextStyle(color: AppTheme.primaryColor, fontSize: ResponsiveUtils.scaleFont(context, 13), fontWeight: FontWeight.w600)),
+                  ]),
+                  Slider(
+                    value: settings.textScale,
+                    min: AppSettingsService.minTextScale,
+                    max: AppSettingsService.maxTextScale,
+                    divisions: 26,
+                    activeColor: AppTheme.primaryColor,
+                    inactiveColor: Colors.white24,
+                    label: '${(settings.textScale * 100).round()}%',
+                    onChanged: settings.setTextScale,
+                  ),
+                ]),
+              ),
+              SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16)),
+
               // ─── 调节 ───
               GlassCard(
                 padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 16)),

@@ -18,9 +18,16 @@ class AppSettingsService with ChangeNotifier {
   static const String _kWallpaperBlur = 'wallpaper_blur';
   static const String _kWallpaperDarken = 'wallpaper_darken';
   static const String _kTtsEnabled = 'tts_enabled';
+  static const String _kTextScale = 'text_scale';
 
   static const String modePreset = 'preset';
   static const String modeImage = 'image';
+
+  /// 字号倍率的可选档位
+  static const List<double> textScaleOptions = [0.85, 1.0, 1.15, 1.3];
+  static const List<String> textScaleLabels = ['小', '标准', '大', '特大'];
+  static const double minTextScale = 0.7;
+  static const double maxTextScale = 2.0;
 
   String _wallpaperMode = modePreset;
   String _presetId = WallpaperPresets.defaultId;
@@ -28,6 +35,7 @@ class AppSettingsService with ChangeNotifier {
   double _wallpaperBlur = 0;
   double _wallpaperDarken = 0.25;
   bool _ttsEnabled = true;
+  double _textScale = 1.0;
   bool _loaded = false;
 
   String get wallpaperMode => _wallpaperMode;
@@ -36,6 +44,9 @@ class AppSettingsService with ChangeNotifier {
   double get wallpaperBlur => _wallpaperBlur;
   double get wallpaperDarken => _wallpaperDarken;
   bool get ttsEnabled => _ttsEnabled;
+
+  /// 用户自定义字号倍率（1.0 = 跟随原本设计）
+  double get textScale => _textScale;
   bool get isLoaded => _loaded;
 
   /// 是否真的应该用自定义图片当背景。
@@ -57,6 +68,7 @@ class AppSettingsService with ChangeNotifier {
     _wallpaperBlur = await settings.getDouble(_kWallpaperBlur) ?? 0;
     _wallpaperDarken = await settings.getDouble(_kWallpaperDarken) ?? 0.25;
     _ttsEnabled = await settings.getBool(_kTtsEnabled) ?? true;
+    _textScale = await settings.getDouble(_kTextScale) ?? 1.0;
     TtsService.instance.enabled = _ttsEnabled;
     _loaded = true;
     notifyListeners();
@@ -132,6 +144,17 @@ class AppSettingsService with ChangeNotifier {
     TtsService.instance.enabled = value;
     if (!value) await TtsService.instance.stop();
     await DatabaseManager.settingsRepository.setBool(_kTtsEnabled, value);
+    notifyListeners();
+  }
+
+  /// 设置全局字号倍率。
+  ///
+  /// 实际生效方式是 app.dart 里用 MediaQuery.textScaler 统一覆盖，
+  /// 因此**不需要**修改任何一处 fontSize 调用点，全 App 立即生效。
+  Future<void> setTextScale(double value) async {
+    final clamped = value.clamp(minTextScale, maxTextScale).toDouble();
+    _textScale = clamped;
+    await DatabaseManager.settingsRepository.setDouble(_kTextScale, clamped);
     notifyListeners();
   }
 }

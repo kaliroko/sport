@@ -41,6 +41,26 @@ class MetamorphosisApp extends StatelessWidget {
         title: '自律',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.darkTheme,
+        // 全局字号倍率（「我的 → 外观设置 → 文字大小」）。
+        //
+        // 用 MediaQuery.textScaler 统一覆盖，而不是去改每一处 fontSize：
+        // 这样全 App 所有 Text 都会跟着缩放，且改动只集中在这一处。
+        // 注意要**乘上系统字体缩放**，否则会覆盖掉用户在系统设置里
+        // 调过的无障碍字号。
+        builder: (context, child) {
+          final settings = context.watch<AppSettingsService>();
+          final mediaQuery = MediaQuery.of(context);
+          // scale(1.0) 对线性缩放器即为其倍率；Android 14+ 的非线性缩放
+          // 会略有偏差，但作为“系统基准倍率”足够用。
+          final systemScale = mediaQuery.textScaler.scale(1.0);
+          final combined = (systemScale * settings.textScale)
+              .clamp(AppSettingsService.minTextScale, AppSettingsService.maxTextScale)
+              .toDouble();
+          return MediaQuery(
+            data: mediaQuery.copyWith(textScaler: TextScaler.linear(combined)),
+            child: child ?? const SizedBox.shrink(),
+          );
+        },
         // 注册命名路由，避免 onboarding 跳转时崩溃
         routes: {
           '/home': (_) => const MainScreen(),
