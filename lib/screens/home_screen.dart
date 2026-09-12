@@ -9,7 +9,6 @@ import 'package:metamorphosis_checkin/utils/constants.dart';
 import 'package:metamorphosis_checkin/utils/md3_spring_curve.dart';
 import 'package:metamorphosis_checkin/widgets/task_card.dart';
 import 'package:metamorphosis_checkin/widgets/progress_ring.dart';
-import 'package:metamorphosis_checkin/widgets/stat_card.dart';
 import 'package:metamorphosis_checkin/theme/app_theme.dart';
 import 'package:metamorphosis_checkin/utils/responsive_utils.dart';
 
@@ -37,6 +36,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
   late AnimationController _checkController;
   late Animation<double> _checkAnimation;
   bool _showCelebration = false;
+  String? _lastCheckedTask;
 
   @override
   void initState() {
@@ -55,6 +55,23 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
   void dispose() {
     _checkController.dispose();
     super.dispose();
+  }
+
+  void _showTaskSuccess(BuildContext context, String taskName) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white),
+            SizedBox(width: ResponsiveUtils.scaleSpacing(context, 8)),
+            Text('$taskName 打卡成功！', style: const TextStyle(color: Colors.white)),
+          ],
+        ),
+        backgroundColor: AppTheme.successColor,
+        duration: const Duration(seconds: 1),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   /// 一键完成今日所有打卡
@@ -76,6 +93,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
     final dateStr = '${today.year}年${today.month}月${today.day}日';
     final weekday = ['日', '一', '二', '三', '四', '五', '六'][today.weekday];
     final isAllComplete = service.completionRate >= 100;
+    final checkedCount = tasks.where((t) => _isTaskChecked(service, t.id)).length;
 
     return Stack(
       children: [
@@ -85,16 +103,16 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
           blendAmount: 10.0,
           child: CustomScrollView(
             slivers: [
-              // 顶部区域
+              // ─── 顶部区域 ───
               SliverToBoxAdapter(
                 child: SafeArea(
                   bottom: false,
                   child: Padding(
-                    padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 20)),
+                    padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 16)),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // 日期和星期
+                        // 日期 + 周
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -102,12 +120,12 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                               dateStr,
                               style: TextStyle(
                                 color: AppTheme.textSecondary,
-                                fontSize: ResponsiveUtils.scaleFont(context, 14),
+                                fontSize: ResponsiveUtils.scaleFont(context, 13),
                               ),
                             ),
                             Container(
                               padding: EdgeInsets.symmetric(
-                                horizontal: ResponsiveUtils.scalePadding(context, 12),
+                                horizontal: ResponsiveUtils.scalePadding(context, 10),
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
@@ -118,129 +136,139 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                                 '周$weekday',
                                 style: TextStyle(
                                   color: AppTheme.primaryColor,
-                                  fontSize: ResponsiveUtils.scaleFont(context, 12),
+                                  fontSize: ResponsiveUtils.scaleFont(context, 11),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
+                        SizedBox(height: ResponsiveUtils.scaleSpacing(context, 6)),
 
                         // 欢迎语
                         Text(
                           '今天也要加油哦！💪',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: ResponsiveUtils.scaleFont(context, 28),
+                            fontSize: ResponsiveUtils.scaleFont(context, 24),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(height: 4),
-                        Text(
-                          isAllComplete ? '太棒了！今日目标全部达成 🎉' : '坚持就是胜利，你已经很棒了！',
-                          style: TextStyle(
-                            color: isAllComplete ? AppTheme.successColor : AppTheme.textSecondary,
-                            fontSize: ResponsiveUtils.scaleFont(context, 14),
-                            fontWeight: isAllComplete ? FontWeight.w600 : FontWeight.normal,
+                        if (!isAllComplete)
+                          Text(
+                            '坚持就是胜利，你已经很棒了！',
+                            style: TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: ResponsiveUtils.scaleFont(context, 13),
+                            ),
+                          )
+                        else
+                          Text(
+                            '太棒了！今日目标全部达成 🎉',
+                            style: TextStyle(
+                              color: AppTheme.successColor,
+                              fontSize: ResponsiveUtils.scaleFont(context, 13),
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: ResponsiveUtils.scaleSpacing(context, 24)),
+                        SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16)),
 
-                        // 统计卡片行
-                        Row(
-                          children: [
-                            Expanded(
-                              child: StatCard(
-                                title: '连续打卡',
-                                value: '${service.getConsecutiveDays()}天',
-                                icon: Icons.local_fire_department,
-                                iconColor: AppTheme.warningColor,
-                                subtitle: '最佳记录: ${service.getBestStreak()}天',
-                              ),
-                            ),
-                            SizedBox(width: ResponsiveUtils.scaleSpacing(context, 12)),
-                            Expanded(
-                              child: StatCard(
-                                title: '今日完成',
-                                value: '${service.completionRate.round()}%',
-                                icon: Icons.check_circle,
-                                iconColor: AppTheme.successColor,
-                                subtitle: '已完成 ${tasks.where((t) => _isTaskChecked(service, t.id)).length}/10项',
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: ResponsiveUtils.scaleSpacing(context, 20)),
-
-                        // 完成率环形图
-                        Center(
-                          child: Column(
+                        // ─── 融合卡片：环形图 + 统计 ───
+                        GlassCard(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: ResponsiveUtils.scalePadding(context, 20),
+                            vertical: ResponsiveUtils.scalePadding(context, 16),
+                          ),
+                          child: Row(
                             children: [
+                              // 完成率环形图（紧凑）
                               ScaleTransition(
                                 scale: _checkAnimation,
                                 child: ProgressRing(
                                   progress: service.completionRate,
-                                  size: ResponsiveUtils.scaleFont(context, 120),
-                                  strokeWidth: ResponsiveUtils.scaleFont(context, 10),
+                                  size: ResponsiveUtils.scaleFont(context, 88),
+                                  strokeWidth: ResponsiveUtils.scaleFont(context, 7),
                                   foregroundColor: isAllComplete
                                       ? AppTheme.successColor
                                       : AppTheme.primaryColor,
                                   labelText: '${service.completionRate.round()}%',
                                 ),
                               ),
-                              SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
-                              Text(
-                                '今日完成率',
-                                style: TextStyle(
-                                  color: AppTheme.textSecondary,
-                                  fontSize: ResponsiveUtils.scaleFont(context, 12),
+                              SizedBox(width: ResponsiveUtils.scaleSpacing(context, 16)),
+                              // 统计数据
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _StatRow(
+                                      icon: Icons.local_fire_department,
+                                      iconColor: AppTheme.warningColor,
+                                      label: '连续打卡',
+                                      value: '${service.getConsecutiveDays()}天',
+                                      sub: '最佳 ${service.getBestStreak()}天',
+                                    ),
+                                    SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
+                                    _StatRow(
+                                      icon: Icons.check_circle,
+                                      iconColor: AppTheme.successColor,
+                                      label: '今日完成',
+                                      value: '$checkedCount / ${tasks.length}',
+                                      sub: isAllComplete ? '全部达成 ✅' : '还差 ${tasks.length - checkedCount}项',
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        SizedBox(height: ResponsiveUtils.scaleSpacing(context, 20)),
+                        SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16)),
 
                         // 一键打卡按钮
                         if (!isAllComplete)
                           GlassButton.custom(
                             onTap: () => _completeAllCheckIn(service),
                             width: double.infinity,
-                            height: ResponsiveUtils.scaleButtonHeight(context, 52),
-                            child: Text(
-                              '✨ 一键完成今日打卡',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: ResponsiveUtils.scaleFont(context, 16),
-                                fontWeight: FontWeight.w600,
-                              ),
+                            height: ResponsiveUtils.scaleButtonHeight(context, 48),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  '✨ 一键完成今日打卡',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: ResponsiveUtils.scaleFont(context, 15),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        SizedBox(height: ResponsiveUtils.scaleSpacing(context, 24)),
+                        SizedBox(height: ResponsiveUtils.scaleSpacing(context, 12)),
                       ],
                     ),
                   ),
                 ),
               ),
 
-              // 任务列表
+              // ─── 任务列表 ───
               SliverPadding(
-                padding: ResponsiveUtils.scaleHorizontalEdgeInsets(context, 20),
+                padding: ResponsiveUtils.scaleHorizontalEdgeInsets(context, 16),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final task = tasks[index];
                       final isChecked = _isTaskChecked(service, task.id);
-
                       return Padding(
-                        padding: EdgeInsets.only(bottom: ResponsiveUtils.scaleSpacing(context, 12)),
+                        padding: EdgeInsets.only(bottom: ResponsiveUtils.scaleSpacing(context, 10)),
                         child: TaskCard(
+                          height: 80,
                           task: task,
                           isChecked: isChecked,
                           onToggle: () {
                             service.toggleTask(task.id, !isChecked);
+                            setState(() => _lastCheckedTask = task.name);
                             if (!isChecked) {
+                              _showTaskSuccess(context, task.name);
                               final remaining = tasks
                                   .where((t) => !_isTaskChecked(service, t.id))
                                   .length;
@@ -322,7 +350,6 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
   bool _isTaskChecked(CheckInService service, String taskId) {
     final checkIn = service.todayCheckIn;
     if (checkIn == null) return false;
-
     switch (taskId) {
       case 'water_morning':
         return checkIn.waterMorning;
@@ -347,5 +374,47 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
       default:
         return false;
     }
+  }
+}
+
+class _StatRow extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final String value;
+  final String sub;
+
+  const _StatRow({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.value,
+    required this.sub,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: iconColor, size: ResponsiveUtils.scaleIcon(context, 16)),
+        SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(
+            color: AppTheme.textSecondary,
+            fontSize: ResponsiveUtils.scaleFont(context, 11),
+          ),
+        ),
+        const Spacer(),
+        Text(
+          value,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: ResponsiveUtils.scaleFont(context, 14),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
   }
 }

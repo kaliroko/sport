@@ -23,8 +23,8 @@ class TaskCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassCard(
-      height: height ?? 64,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      height: height ?? 80,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
           Container(
