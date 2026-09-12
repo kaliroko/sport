@@ -21,6 +21,24 @@ class WorkoutPlan {
     required this.difficulty,
     required this.dailySchedule,
   });
+
+  /// 取第 [dayIndex] 天（0 基）的训练动作。
+  ///
+  /// 关键修复：原实现直接用 `dailySchedule[dayIndex]`，而「腹肌撕裂者 30天」
+  /// 这类计划的日程表只有 7 项，第 8 天起取到 null 后，调用方会**静默回退到
+  /// 新手减脂计划的第 0 天** —— 页面显示「腹肌撕裂者」，实际做的却是
+  /// 标准俯卧撑 / 深蹲 / 平板支撑。
+  /// 现在按日程表长度取模循环，且任何回退都只发生在本计划内部。
+  List<MovementConfig> movementsForDay(int dayIndex) {
+    if (dailySchedule.isEmpty) return const <MovementConfig>[];
+    final int normalized = dayIndex % dailySchedule.length;
+    return dailySchedule[normalized] ??
+        dailySchedule[0] ??
+        const <MovementConfig>[];
+  }
+
+  /// 是否用户自建计划（自建计划不允许被覆盖写回内置常量）
+  bool get isCustom => id.startsWith('custom_');
 }
 
 // ─── 内置训练计划 ─────────────────────────────────────────────────────────────
@@ -28,12 +46,39 @@ class WorkoutPlan {
 class WorkoutPlans {
   WorkoutPlans._();
 
-  static const List<WorkoutPlan> all = [
+  static final List<WorkoutPlan> all = <WorkoutPlan>[
     planBeginnerFatLoss,
     planAbsShredder,
     planIntermediateStrength,
     plan30DayTransformation,
   ];
+
+  /// 全部内置动作（按名字去重，保持首次出现顺序）。
+  /// 供「自定义训练计划」的动作库选择器使用。
+  static List<MovementConfig> get allMovements {
+    final result = <MovementConfig>[];
+    final seen = <String>{};
+
+    void addAll(List<MovementConfig> list) {
+      for (final m in list) {
+        if (seen.add(m.name)) result.add(m);
+      }
+    }
+
+    addAll(AppConstants.strengthMovements);
+    for (final plan in all) {
+      for (final day in plan.dailySchedule.values) {
+        addAll(day);
+      }
+    }
+    return result;
+  }
+
+  /// 动作名 → 动作定义。自定义计划的日程表里存的是动作名，
+  /// 需要通过这张表还原成完整的 MovementConfig。
+  static Map<String, MovementConfig> get movementByName => {
+        for (final m in allMovements) m.name: m,
+      };
 
   static const WorkoutPlan planBeginnerFatLoss = WorkoutPlan(
     id: 'beginner_fat_loss',
@@ -86,22 +131,38 @@ class WorkoutPlans {
     },
   );
 
-  static const WorkoutPlan plan30DayTransformation = WorkoutPlan(
+  static final WorkoutPlan plan30DayTransformation = WorkoutPlan(
     id: '30day_transform',
     name: '30天蜕变计划',
-    description: '循序渐进，每周递增难度，从新手到蜕变',
+    description: '四周周期化递进：适应 → 强化 → 塑形 → 冲刺',
     durationDays: 30,
     difficulty: PlanDifficulty.intermediate,
-    dailySchedule: {
-      0: _beginnerDay1,
-      1: _beginnerDay2,
-      2: _beginnerDay1,
-      3: _beginnerDay3,
-      4: _beginnerDay1,
-      5: _beginnerDay2,
-      6: _beginnerDay3,
-    },
+    dailySchedule: _build30DaySchedule(),
   );
+
+  /// 「30天蜕变计划」的完整 30 天日程。
+  ///
+  /// 原实现只写了 7 天，而 `durationDays` 是 30 —— 第 8 天起
+  /// `dailySchedule[dayIndex]` 取到 null，调用方静默回退到别的计划
+  /// （详见 WorkoutPlan.movementsForDay 的注释）。
+  /// 这里补齐 30 天，并做成真正的周期化递进而不是简单重复。
+  static Map<int, List<MovementConfig>> _build30DaySchedule() {
+    final template = <List<MovementConfig>>[
+      // 第 1 周 · 适应期
+      _beginnerDay1, _beginnerDay2, _beginnerDay3, _beginnerDay1, _beginnerDay2, _absCore, _absRest,
+      // 第 2 周 · 强化
+      _beginnerDay1, _advancedDay1, _beginnerDay3, _advancedDay2, _beginnerDay2, _absOblique, _absRest,
+      // 第 3 周 · 塑形
+      _advancedDay1, _advancedDay2, _advancedDay3, _advancedDay1, _absUpper, _advancedDay2, _absRest,
+      // 第 4 周 · 冲刺
+      _advancedDay1, _advancedDay2, _advancedDay3, _advancedDay1, _advancedDay2, _advancedDay3, _absRest,
+      // 第 29、30 天 · 主动恢复与收尾
+      _absRest, _absLower,
+    ];
+    return {
+      for (var i = 0; i < template.length; i++) i: template[i],
+    };
+  }
 
   // ─── 训练内容定义 ────────────────────────────────────────────────────────────
   static const List<MovementConfig> _beginnerDay1 = [

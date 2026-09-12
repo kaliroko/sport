@@ -3,11 +3,14 @@ library;
 
 import 'dart:convert';
 
+import 'package:metamorphosis_checkin/utils/constants.dart';
+
 enum Mood { neutral, happy, sad }
 
 class DailyCheckIn {
   final String date;
-  final int waterMl; // 当日总饮水毫升数（自动累加，250ml/杯）
+  final int waterMl; // 当日总饮水毫升数（按杯累加）
+  final bool waterMorning; // 晨起温水（原来是纯 UI 任务，没有存储列）
   final bool faceMassageMorning;
   final bool breakfastHealthy;
   final bool lunchControlled;
@@ -25,6 +28,7 @@ class DailyCheckIn {
   const DailyCheckIn({
     required this.date,
     this.waterMl = 0,
+    this.waterMorning = false,
     this.faceMassageMorning = false,
     this.breakfastHealthy = false,
     this.lunchControlled = false,
@@ -47,13 +51,27 @@ class DailyCheckIn {
     return tasks.isEmpty ? 0 : (completed / tasks.length) * 100;
   }
 
-  /// 全部任务列表（固定 + 自定义）
+  /// 全部任务列表（固定 10 项 + 自定义任务）
+  ///
+  /// 必须与 AppConstants.dailyTasks 的 10 项严格一一对应，否则首页显示的
+  /// 「今日完成 X / 10」会和环形图百分比对不上：
+  ///   water_morning        → waterMorning
+  ///   face_massage_morning → faceMassageMorning
+  ///   breakfast_healthy    → breakfastHealthy
+  ///   lunch_controlled     → lunchControlled
+  ///   water_goal           → waterMl >= AppConstants.waterGoalMl
+  ///   no_snacks            → noSnacks
+  ///   dinner_controlled    → dinnerControlled
+  ///   workout_done         → workoutDone
+  ///   face_massage_night   → faceMassageNight
+  ///   sleep_before_23      → sleepBefore23
   List<bool> _allTasks() {
     return [
-      waterMl >= 1500,   // 达标线：1500ml
+      waterMorning,
       faceMassageMorning,
       breakfastHealthy,
       lunchControlled,
+      waterMl >= AppConstants.waterGoalMl, // 达标线统一取常量，不再写死
       noSnacks,
       dinnerControlled,
       workoutDone,
@@ -81,6 +99,8 @@ class DailyCheckIn {
     return DailyCheckIn(
       date: map['date'] as String,
       waterMl: (map['water_ml'] as int?) ?? 0,
+      // 列不存在时返回 null，null == 1 为 false，行为安全
+      waterMorning: (map['water_morning'] as int?) == 1,
       faceMassageMorning: (map['face_massage_morning'] as int?) == 1,
       breakfastHealthy: (map['breakfast_healthy'] as int?) == 1,
       lunchControlled: (map['lunch_controlled'] as int?) == 1,
@@ -102,6 +122,7 @@ class DailyCheckIn {
     return {
       'date': date,
       'water_ml': waterMl,
+      'water_morning': waterMorning ? 1 : 0,
       'face_massage_morning': faceMassageMorning ? 1 : 0,
       'breakfast_healthy': breakfastHealthy ? 1 : 0,
       'lunch_controlled': lunchControlled ? 1 : 0,
@@ -121,6 +142,7 @@ class DailyCheckIn {
   /// 复制并更新字段
   DailyCheckIn copyWith({
     int? waterMl,
+    bool? waterMorning,
     bool? faceMassageMorning,
     bool? breakfastHealthy,
     bool? lunchControlled,
@@ -137,6 +159,7 @@ class DailyCheckIn {
     return DailyCheckIn(
       date: date,
       waterMl: waterMl ?? this.waterMl,
+      waterMorning: waterMorning ?? this.waterMorning,
       faceMassageMorning: faceMassageMorning ?? this.faceMassageMorning,
       breakfastHealthy: breakfastHealthy ?? this.breakfastHealthy,
       lunchControlled: lunchControlled ?? this.lunchControlled,
@@ -153,8 +176,14 @@ class DailyCheckIn {
     );
   }
 
-  /// 加水（每次 +250ml）
+  /// 加水
   DailyCheckIn addWater(int ml) => copyWith(waterMl: waterMl + ml);
+
+  /// 直接设定饮水总量（供「点第几杯」的交互使用）。
+  /// 夹在 0 ~ 目标值之间：原先 addWater 没有上限，可以点到几千毫升。
+  DailyCheckIn setWater(int ml) => copyWith(
+        waterMl: ml.clamp(0, AppConstants.waterGoalMl).toInt(),
+      );
 
   /// 从JSON字符串创建
   factory DailyCheckIn.fromJson(String source) =>

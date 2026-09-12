@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:metamorphosis_checkin/services/user_profile_service.dart';
 import 'package:metamorphosis_checkin/services/debug_upload_service.dart';
 import 'package:metamorphosis_checkin/services/notification_service.dart';
+import 'package:metamorphosis_checkin/services/app_settings_service.dart';
 import 'package:metamorphosis_checkin/models/user_profile.dart';
 import 'package:metamorphosis_checkin/theme/app_theme.dart';
 import 'package:metamorphosis_checkin/utils/responsive_utils.dart';
@@ -865,6 +866,20 @@ class _SettingsSection extends StatelessWidget {
           Divider(color: AppTheme.textHint),
           _SettingsItem(icon: Icons.tune, title: '选择阶段', subtitle: '第${context.watch<UserProfileService>().profile?.currentWeek ?? 1}周', onTap: () => state._showPhaseSelector(context)),
           Divider(color: AppTheme.textHint),
+          _SettingsItem(icon: Icons.palette_outlined, title: '外观设置', subtitle: '壁纸与背景', onTap: () => Navigator.of(context).pushNamed('/appearance')),
+          Divider(color: AppTheme.textHint),
+          _SettingsItem(icon: Icons.fitness_center, title: '训练计划', subtitle: '新建 / 编辑自定义计划', onTap: () => Navigator.of(context).pushNamed('/plans')),
+          Divider(color: AppTheme.textHint),
+          _SettingsItem(icon: Icons.accessibility_new, title: '体态矫正', subtitle: '圆肩 / 驼背 / 头前伸', onTap: () => Navigator.of(context).pushNamed('/posture')),
+          Divider(color: AppTheme.textHint),
+          _SettingsSwitchItem(
+            icon: Icons.volume_up,
+            title: '语音播报',
+            subtitle: '训练时播报组数与倒计时',
+            value: context.watch<AppSettingsService>().ttsEnabled,
+            onChanged: (v) => context.read<AppSettingsService>().setTtsEnabled(v),
+          ),
+          Divider(color: AppTheme.textHint),
           _SettingsItem(icon: Icons.notifications, title: '提醒设置', onTap: () => state._showReminderDialog(context)),
           Divider(color: AppTheme.textHint),
           _SettingsItem(icon: Icons.download, title: '导出数据', onTap: () => state._showExportDialog(context)),
@@ -890,6 +905,34 @@ class _SettingsItem extends StatelessWidget {
       subtitle: subtitle != null ? Text(subtitle!, style: const TextStyle(color: AppTheme.textHint)) : null,
       trailing: const Icon(Icons.chevron_right, color: AppTheme.textHint),
       onTap: onTap,
+    );
+  }
+}
+
+/// 带开关的设置项（用于语音播报等布尔偏好）
+class _SettingsSwitchItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _SettingsSwitchItem({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.onChanged,
+    this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SwitchListTile(
+      secondary: Icon(icon, color: AppTheme.primaryColor),
+      title: Text(title, style: const TextStyle(color: Colors.white)),
+      subtitle: subtitle != null ? Text(subtitle!, style: const TextStyle(color: AppTheme.textHint)) : null,
+      value: value,
+      onChanged: onChanged,
     );
   }
 }

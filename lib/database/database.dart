@@ -8,7 +8,7 @@ import 'package:path_provider/path_provider.dart';
 
 class DatabaseHelper {
   static Database? _database;
-  static const int _version = 3;
+  static const int _version = 5;
   static const String _dbName = 'metamorphosis.db';
 
   DatabaseHelper._();
@@ -36,6 +36,7 @@ class DatabaseHelper {
       CREATE TABLE daily_check_ins (
         date TEXT PRIMARY KEY,
         water_ml INTEGER DEFAULT 0,
+        water_morning INTEGER DEFAULT 0,
         face_massage_morning INTEGER DEFAULT 0,
         breakfast_healthy INTEGER DEFAULT 0,
         lunch_controlled INTEGER DEFAULT 0,
@@ -139,18 +140,46 @@ class DatabaseHelper {
     await db.execute('CREATE INDEX idx_workouts_date ON workout_logs(date)');
     // 身体测量索引
     await db.execute('CREATE INDEX idx_measurements_date ON body_measurements(date)');
+    // 应用设置表（key-value）
+    await db.execute('''
+      CREATE TABLE app_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+  }
+
+  /// 安全加列：先查 PRAGMA table_info，列已存在则跳过。
+  ///
+  /// 历史迁移链存在不一致（v1 建表语句与 v2 的 ALTER 有重叠），
+  /// 直接 ALTER 可能抛 "duplicate column name" 导致启动崩溃，
+  /// 因此统一走这个幂等入口。
+  static Future<void> _addColumnIfMissing(
+    Database db,
+    String table,
+    String column,
+    String definition,
+  ) async {
+    final info = await db.rawQuery('PRAGMA table_info($table)');
+    final bool exists = info.any((row) => row['name'] == column);
+    if (!exists) {
+      await db.execute('ALTER TABLE $table ADD COLUMN $column $definition');
+    }
   }
 
   static Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      // v2→v3: water_ml + mood + custom_tasks (handled in v1 schema now, skip for fresh install)
-    }
-    if (oldVersion == 2) {
-      // Legacy migration for existing v2 DBs
-      await db.execute('ALTER TABLE daily_check_ins ADD COLUMN mood INTEGER DEFAULT 0');
-      await db.execute('ALTER TABLE daily_check_ins ADD COLUMN water_ml INTEGER DEFAULT 0');
+    // 逐版本递进迁移。
+    //
+    // 原实现是 `if (oldVersion < 2) { /* 空块 */ }` 加 `if (oldVersion == 2)`，
+    // 用等值判断导致 v2 之前的用户永远拿不到后续迁移。这里统一改成
+    // `<` 递进，并且所有加列都走 _addColumnIfMissing，重复执行也安全。
+    if (oldVersion < 3) {
+      // v1/v2 → v3: mood + water_ml + custom_tasks + workout_plans
+      await _addColumnIfMissing(db, 'daily_check_ins', 'mood', 'INTEGER DEFAULT 0');
+      await _addColumnIfMissing(db, 'daily_check_ins', 'water_ml', 'INTEGER DEFAULT 0');
       await db.execute('''
-        CREATE TABLE custom_tasks (
+        CREATE TABLE IF NOT EXISTS custom_tasks (
           id TEXT PRIMARY KEY,
           name TEXT NOT NULL,
           icon TEXT DEFAULT '⭐',
@@ -160,7 +189,7 @@ class DatabaseHelper {
         )
       ''');
       await db.execute('''
-        CREATE TABLE workout_plans (
+        CREATE TABLE IF NOT EXISTS workout_plans (
           id TEXT PRIMARY KEY,
           name TEXT NOT NULL,
           description TEXT DEFAULT '',
@@ -168,6 +197,24 @@ class DatabaseHelper {
           difficulty TEXT DEFAULT 'beginner',
           schedule TEXT DEFAULT '',
           created_at TEXT NOT NULL
+        )
+      ''');
+    }
+    if (oldVersion < 4) {
+      // v3 → v4: 「晨起温水」此前只有 AppConstants 里的任务定义，却没有对应的
+      // 存储列 —— 首页 _isTaskChecked 找不到 case 而恒返回 false，
+      // 导致该任务卡永远无法勾选，也连带让「勾完所有任务」的庆祝判定失效。
+      await _addColumnIfMissing(db, 'daily_check_ins', 'water_morning', 'INTEGER DEFAULT 0');
+    }
+    if (oldVersion < 5) {
+      // v4 → v5: 新增 app_settings 表，用于保存壁纸、语音播报开关、
+      // 当前训练计划与计划起始日期等跨启动需要保留的偏好。
+      // 此前这些状态要么根本不存在（计划天数恒为 1 天），要么只活在内存里。
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS app_settings (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL,
+          updated_at TEXT NOT NULL
         )
       ''');
     }

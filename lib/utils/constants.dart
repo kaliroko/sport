@@ -84,12 +84,27 @@ class BadgeConfig {
 class AppConstants {
   AppConstants._();
 
+  // ─── 饮水目标（全局唯一来源）──────────────────────────────────────────────
+  // 修复前这里有三个互相矛盾的数字：任务卡文案写 2000ml、模型达标线 1500ml、
+  // 首页进度条 1500ml、check_in_service.waterProgress 又是写死的 1500。
+  // 现在统一从下面的常量派生。
+  /// 每日饮水达标线（ml）
+  static const int waterGoalMl = 1500;
+
+  /// 一杯水的容量（ml）
+  static const int waterCupMl = 250;
+
+  /// 达标需要多少杯
+  static const int waterGoalCups = waterGoalMl ~/ waterCupMl;
+
   // 每日必做清单
-  static const List<TaskConfig> dailyTasks = [
+  // 由 const 改为 final，以便 description 内插值引用上面的常量，
+  // 避免文案里再写死一个可能过期的数字。
+  static final List<TaskConfig> dailyTasks = [
     TaskConfig(
       id: 'water_morning',
       name: '晨起温水',
-      description: '起床后立即喝300ml温水',
+      description: '起床后立即喝一杯温水（约${waterCupMl}ml）',
       icon: '💧',
     ),
     TaskConfig(
@@ -111,9 +126,13 @@ class AppConstants {
       icon: '🥗',
     ),
     TaskConfig(
-      id: 'water_2l',
-      name: '喝水2L',
-      description: '全天累计喝2000ml水',
+      // 原 id 为 'water_2l'，但达标线其实是 1500ml，名字与数值不符、
+      // 容易误导后续维护。该 id 只在首页 _isTaskChecked 与
+      // CheckInService.toggleTask 的 switch 中使用，未持久化到数据库，
+      // 因此改名没有迁移成本。
+      id: 'water_goal',
+      name: '喝够水',
+      description: '全天累计喝够${waterGoalMl}ml水',
       icon: '🚰',
     ),
     TaskConfig(

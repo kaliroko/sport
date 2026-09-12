@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:metamorphosis_checkin/database/app_database.dart';
 import 'package:metamorphosis_checkin/models/daily_check_in.dart';
 import 'package:metamorphosis_checkin/models/custom_task.dart';
+import 'package:metamorphosis_checkin/utils/constants.dart';
 import 'package:rxdart/rxdart.dart';
 
 class CheckInService with ChangeNotifier {
@@ -46,6 +47,17 @@ class CheckInService with ChangeNotifier {
     if (_todayCheckIn == null) return;
     final updated = _todayCheckIn!.copyWith(updatedAt: DateTime.now());
     switch (taskId) {
+      // 原实现缺少这两个 case：switch 不匹配时静默什么都不做，
+      // 所以首页「晨起温水」「喝够水」两张卡点了没反应。
+      case 'water_morning':
+        _todayCheckIn = updated.copyWith(waterMorning: value); break;
+      case 'water_goal':
+        // 「喝够水」没有独立字段，由 waterMl 派生：
+        // 勾选即补满目标水量，取消即清零。
+        _todayCheckIn = updated.copyWith(
+          waterMl: value ? AppConstants.waterGoalMl : 0,
+        );
+        break;
       case 'face_massage_morning':
         _todayCheckIn = updated.copyWith(faceMassageMorning: value); break;
       case 'breakfast_healthy':
@@ -75,6 +87,14 @@ class CheckInService with ChangeNotifier {
     _notifyChange();
   }
 
+  /// 设定今日饮水总量（供首页「点第几杯」交互使用）
+  Future<void> setWater(int ml) async {
+    if (_todayCheckIn == null) return;
+    _todayCheckIn = _todayCheckIn!.setWater(ml);
+    await DatabaseManager.checkInRepository.saveCheckIn(_todayCheckIn!);
+    _notifyChange();
+  }
+
   /// 切换自定义任务
   Future<void> toggleCustomTask(String taskId, bool value) async {
     if (_todayCheckIn == null) return;
@@ -94,24 +114,36 @@ class CheckInService with ChangeNotifier {
   }
 
   /// 一键完成所有固定任务
+  ///
+  /// 必须同时补上 waterMorning 与水量，否则 10 项里只有 8 项为真：
+  /// 完成率停在 80%，按钮不消失、"全部达成"文案不出现，
+  /// 用户会以为「一键完成」没生效。
   Future<void> completeAllTasks() async {
     if (_todayCheckIn == null) return;
     final now = DateTime.now();
+    final current = _todayCheckIn!;
     _todayCheckIn = DailyCheckIn(
       date: todayDate,
-      waterMl: _todayCheckIn!.waterMl,
+      // 取较大值，避免把用户已经记录的饮水量改小
+      waterMl: current.waterMl >= AppConstants.waterGoalMl
+          ? current.waterMl
+          : AppConstants.waterGoalMl,
+      waterMorning: true,
       faceMassageMorning: true, breakfastHealthy: true, lunchControlled: true,
       noSnacks: true, dinnerControlled: true, workoutDone: true,
       faceMassageNight: true, sleepBefore23: true,
-      customTasks: _todayCheckIn!.customTasks,
-      mood: _todayCheckIn!.mood,
-      note: _todayCheckIn!.note,
-      createdAt: _todayCheckIn!.createdAt,
+      customTasks: current.customTasks,
+      mood: current.mood,
+      note: current.note,
+      createdAt: current.createdAt,
       updatedAt: now,
     );
     await DatabaseManager.checkInRepository.saveCheckIn(_todayCheckIn!);
     _notifyChange();
   }
+
+  /// 标记今日训练完成（训练页做完所有动作后调用）
+  Future<void> markWorkoutDone(bool value) => toggleTask('workout_done', value);
 
   double get completionRate => _todayCheckIn?.completionRate ?? 0.0;
 
@@ -120,16 +152,23 @@ class CheckInService with ChangeNotifier {
     notifyListeners();
   }
 
-  /// 公开刷新接口，供外部调用以通知监听者
-  void refresh() => notifyListeners();
+  /// 重新从数据库加载自定义习惯，并通知监听者。
+  ///
+  /// 原实现只调 notifyListeners()、不重新查询，导致新增/删除自定义习惯后
+  /// 首页列表不更新——必须重启 App 才看得到变化。
+  Future<void> refresh() async {
+    _customTasks = await DatabaseManager.customTaskRepository.getAll();
+    notifyListeners();
+  }
 
   Future<int> getConsecutiveDays() async => await DatabaseManager.checkInRepository.getConsecutiveDays();
   Future<int> getBestStreak() async => await DatabaseManager.checkInRepository.getBestStreak();
   Future<List<DailyCheckIn>> getHistoricalCheckIns({int days = 60}) async =>
       await DatabaseManager.checkInRepository.getRecentCheckIns(days);
 
-  /// 获取今日饮水进度百分比（1500ml达标）
-  double get waterProgress => (_todayCheckIn?.waterMl ?? 0) / 1500 * 100;
+  /// 获取今日饮水进度百分比（达标线取 AppConstants.waterGoalMl）
+  double get waterProgress =>
+      (_todayCheckIn?.waterMl ?? 0) / AppConstants.waterGoalMl * 100;
 
   @override
   void dispose() {

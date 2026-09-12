@@ -325,6 +325,11 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
     final checkIn = service.todayCheckIn;
     if (checkIn == null) return false;
     switch (taskId) {
+      // 原实现缺这两项 → 恒返回 false：
+      //  · 「今日完成」最多只能显示 8 / 10
+      //  · remaining 永远 >= 2，勾完所有任务也不会触发庆祝动画（死代码）
+      case 'water_morning': return checkIn.waterMorning;
+      case 'water_goal': return checkIn.waterMl >= AppConstants.waterGoalMl;
       case 'face_massage_morning': return checkIn.faceMassageMorning;
       case 'breakfast_healthy': return checkIn.breakfastHealthy;
       case 'lunch_controlled': return checkIn.lunchControlled;
@@ -438,52 +443,92 @@ class _MoodChip extends StatelessWidget {
 }
 
 // ─── 饮水追踪 ──────────────────────────────────────────────────────────────────
+/// 交互语义修正：
+///  - 原来 6 个杯子都执行 addWater(+250)，刻度标着 100~1500 却点哪个都只加一杯；
+///  - 没有上限，可以点到几千毫升；也无法撤销点错的一次。
+///  - 标签 '${ml ~/ 100}00' 用整除拼字符串，250 显示成 "200"、750 显示成 "700"。
+/// 现在改为「点第 N 杯 = 把今日饮水设为 N 杯」，再点已满的最高杯回退一杯。
 class _WaterTracker extends StatelessWidget {
   final CheckInService service;
   const _WaterTracker({required this.service});
 
-  static const int goalMl = 1500;
-  static const int cupMl = 250;
-
   @override
   Widget build(BuildContext context) {
     final waterMl = service.todayCheckIn?.waterMl ?? 0;
-    // LinearProgressIndicator 要的是 0.0~1.0 的比例；
-    // 原写法先 ×100 再按 0~1 clamp，导致喝一杯就满格。
+    final goalMl = AppConstants.waterGoalMl;
+    final cupMl = AppConstants.waterCupMl;
+    final cupCount = AppConstants.waterGoalCups;
+
+    // LinearProgressIndicator 要的是 0.0~1.0 的比例
     final progress = (waterMl / goalMl).clamp(0.0, 1.0);
+    final bool done = waterMl >= goalMl;
+    final int filledCups = (waterMl / cupMl).floor().clamp(0, cupCount).toInt();
+
+    final cupWidth = ResponsiveUtils.scaleSize(context, 42);
+    final cupHeight = ResponsiveUtils.scaleSize(context, 50);
+
     return GlassCard(
-      padding: EdgeInsets.symmetric(horizontal: ResponsiveUtils.scalePadding(context, 16), vertical: 14),
+      padding: EdgeInsets.symmetric(
+        horizontal: ResponsiveUtils.scalePadding(context, 16),
+        vertical: ResponsiveUtils.scalePadding(context, 14),
+      ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('饮水记录', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
-            Text('$waterMl / $goalMl ml', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+            Row(children: [
+              Text('饮水记录', style: TextStyle(color: AppTheme.textSecondary, fontSize: ResponsiveUtils.scaleFont(context, 12))),
+              if (done) ...[
+                SizedBox(width: ResponsiveUtils.scaleSpacing(context, 6)),
+                Text('已达标 ✅', style: TextStyle(color: AppTheme.successColor, fontSize: ResponsiveUtils.scaleFont(context, 11), fontWeight: FontWeight.w600)),
+              ],
+            ]),
+            Text('$waterMl / $goalMl ml', style: TextStyle(color: Colors.white, fontSize: ResponsiveUtils.scaleFont(context, 13), fontWeight: FontWeight.w600)),
           ],
         ),
-        SizedBox(height: 8),
-        LinearProgressIndicator(value: progress, minHeight: 6, borderRadius: BorderRadius.circular(3),
-          color: progress >= 1.0 ? AppTheme.successColor : AppTheme.primaryColor,
-          backgroundColor: Colors.white.withValues(alpha: 0.1)),
-        SizedBox(height: 10),
+        SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
+        LinearProgressIndicator(
+          value: progress,
+          minHeight: 6,
+          borderRadius: BorderRadius.circular(3),
+          color: done ? AppTheme.successColor : AppTheme.primaryColor,
+          backgroundColor: Colors.white.withValues(alpha: 0.1),
+        ),
+        SizedBox(height: ResponsiveUtils.scaleSpacing(context, 6)),
+        Text('点第 N 个杯子 = 记为喝了 N 杯（${cupMl}ml/杯）',
+            style: TextStyle(color: AppTheme.textHint, fontSize: ResponsiveUtils.scaleFont(context, 10))),
+        SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: List.generate(6, (i) {
-            final ml = (i + 1) * cupMl;
-            final filled = waterMl >= ml;
+          children: List.generate(cupCount, (i) {
+            final cupIndex = i + 1;
+            final bool filled = filledCups >= cupIndex;
+            final bool isNext = filledCups + 1 == cupIndex;
             return GestureDetector(
-              onTap: () => service.addWater(cupMl),
+              onTap: () {
+                // 点已满的最高杯 → 回退一杯；否则直接跳到该杯数
+                final target = (filledCups == cupIndex) ? cupIndex - 1 : cupIndex;
+                service.setWater(target * cupMl);
+              },
               child: Container(
-                width: 44, height: 52,
+                width: cupWidth,
+                height: cupHeight,
                 decoration: BoxDecoration(
                   color: filled ? AppTheme.primaryColor.withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(6), bottom: Radius.circular(6)),
-                  border: filled ? Border.all(color: AppTheme.primaryColor, width: 2) : null,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(6), bottom: Radius.circular(6)),
+                  border: filled
+                      ? Border.all(color: AppTheme.primaryColor, width: 2)
+                      : (isNext ? Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.4)) : null),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [Text(filled ? '✓' : '💧', style: TextStyle(fontSize: 16)),
-                    SizedBox(height: 2), Text('${ml ~/ 100}00', style: TextStyle(color: filled ? AppTheme.successColor : AppTheme.textHint, fontSize: 9))],
+                  children: [
+                    Text(filled ? '✓' : '💧', style: TextStyle(fontSize: ResponsiveUtils.scaleIcon(context, 14))),
+                    const SizedBox(height: 2),
+                    // 直接显示真实毫升数，不再用整除拼字符串
+                    Text('${cupIndex * cupMl}',
+                        style: TextStyle(color: filled ? AppTheme.successColor : AppTheme.textHint, fontSize: ResponsiveUtils.scaleFont(context, 8))),
+                  ],
                 ),
               ),
             );
@@ -514,11 +559,15 @@ class _CustomTaskCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(width: 36, height: 36, decoration: BoxDecoration(color: isChecked ? AppTheme.checkedColor.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-            child: Center(child: Text(task.icon, style: const TextStyle(fontSize: 18)))),
-          SizedBox(width: 12),
+          Container(
+            width: ResponsiveUtils.scaleSize(context, 36),
+            height: ResponsiveUtils.scaleSize(context, 36),
+            decoration: BoxDecoration(color: isChecked ? AppTheme.checkedColor.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+            child: Center(child: Text(task.icon, style: TextStyle(fontSize: ResponsiveUtils.scaleIcon(context, 18)))),
+          ),
+          SizedBox(width: ResponsiveUtils.scaleSpacing(context, 12)),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
-            Text(task.name, style: TextStyle(color: isChecked ? AppTheme.checkedColor : AppTheme.textPrimary, fontSize: 14, fontWeight: FontWeight.w500)),
+            Text(task.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: isChecked ? AppTheme.checkedColor : AppTheme.textPrimary, fontSize: ResponsiveUtils.scaleFont(context, 14), fontWeight: FontWeight.w500)),
           ])),
           Transform.scale(scale: 1.1, child: Checkbox(value: isChecked, onChanged: (_) => onToggle(), activeColor: AppTheme.checkedColor, checkColor: Colors.white, side: const BorderSide(color: AppTheme.textHint))),
           IconButton(icon: Icon(Icons.delete_outline, color: AppTheme.errorColor.withValues(alpha: 0.7), size: 20), onPressed: onDelete),
@@ -534,24 +583,71 @@ Future<void> _showAddCustomTaskDialog(BuildContext context, CheckInService servi
   final icons = ['⭐', '🌟', '💪', '📚', '🏃', '🧘', '🎯', '💤', '🥗', '💊', '✍️', '🎵'];
   String selectedIcon = '⭐';
 
-  await GlassDialog.show<String?>(
+  await GlassDialog.show<void>(
     context: context,
     title: '添加新习惯',
-    content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-      TextField(controller: nameCtrl, style: const TextStyle(color: Colors.white), decoration: InputDecoration(labelText: '习惯名称', labelStyle: TextStyle(color: AppTheme.textSecondary), prefixIcon: Icon(Icons.edit, color: AppTheme.primaryColor), filled: true, fillColor: Colors.white.withValues(alpha: 0.08), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none))),
-      SizedBox(height: 16),
-      Wrap(spacing: 8, runSpacing: 8, children: icons.map((e) => GestureDetector(onTap: () => Navigator.of(context).pop(e), child: Container(width: 40, height: 40, decoration: BoxDecoration(color: selectedIcon == e ? AppTheme.primaryColor.withValues(alpha: 0.4) : Colors.white.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)), child: Center(child: Text(e, style: const TextStyle(fontSize: 20)))))).toList()),
-    ]),
+    // 用 StatefulBuilder 承载「图标选中态」。
+    // 原实现里图标格子的 onTap 是 Navigator.of(context).pop(e)——
+    // 点一下直接把弹窗关掉，并把图标当作返回值丢掉，selectedIcon 永远是 '⭐'。
+    content: StatefulBuilder(
+      builder: (ctx, setDlgState) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextField(
+            controller: nameCtrl,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              labelText: '习惯名称',
+              labelStyle: const TextStyle(color: AppTheme.textSecondary),
+              prefixIcon: const Icon(Icons.edit, color: AppTheme.primaryColor),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.08),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text('选择图标', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: icons.map((e) => GestureDetector(
+              onTap: () => setDlgState(() => selectedIcon = e),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: selectedIcon == e
+                      ? AppTheme.primaryColor.withValues(alpha: 0.4)
+                      : Colors.white.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  border: selectedIcon == e ? Border.all(color: AppTheme.primaryColor, width: 2) : null,
+                ),
+                child: Center(child: Text(e, style: const TextStyle(fontSize: 20))),
+              ),
+            )).toList(),
+          ),
+        ],
+      ),
+    ),
     actions: [
       GlassDialogAction(label: '取消', onPressed: () => Navigator.of(context).pop()),
       GlassDialogAction(label: '保存', isPrimary: true, onPressed: () async {
         final name = nameCtrl.text.trim();
         if (name.isEmpty) return;
         final id = 'custom_${DateTime.now().millisecondsSinceEpoch}';
-        await DatabaseManager.customTaskRepository.insert(CustomTask(id: id, name: name, icon: selectedIcon));
-        service.refresh();
+        await DatabaseManager.customTaskRepository.insert(
+          CustomTask(id: id, name: name, icon: selectedIcon),
+        );
+        // 必须 await：refresh() 现在会真正重新查库，
+        // 否则新习惯写进了数据库但首页列表不更新（要重启才看得到）。
+        await service.refresh();
+        if (!context.mounted) return;
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('「$name」已添加'), backgroundColor: AppTheme.successColor, behavior: SnackBarBehavior.floating));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('「$name」已添加'), backgroundColor: AppTheme.successColor, behavior: SnackBarBehavior.floating),
+        );
       }),
     ],
   );
@@ -572,7 +668,9 @@ Future<void> _confirmDeleteCustomTask(BuildContext context, CheckInService servi
   );
   if (confirmed == true && context.mounted) {
     await DatabaseManager.customTaskRepository.delete(task.id);
-    service.refresh();
+    // 同上：await 才会重新查库并刷新首页列表
+    await service.refresh();
+    if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已删除「${task.name}」'), backgroundColor: AppTheme.infoColor, behavior: SnackBarBehavior.floating));
   }
 }

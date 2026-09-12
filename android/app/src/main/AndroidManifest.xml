@@ -40,5 +40,10 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Android 11+ 需要显式声明才能发现系统 TTS 引擎，
+             否则 flutter_tts 会静默失效（不报错但没声音） -->
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE"/>
+        </intent>
     </queries>
 </manifest>

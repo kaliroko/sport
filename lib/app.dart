@@ -11,11 +11,16 @@ import 'package:metamorphosis_checkin/screens/diet_screen.dart';
 import 'package:metamorphosis_checkin/screens/stats_screen.dart';
 import 'package:metamorphosis_checkin/screens/profile_screen.dart';
 import 'package:metamorphosis_checkin/screens/onboarding_screen.dart';
+import 'package:metamorphosis_checkin/screens/appearance_screen.dart';
+import 'package:metamorphosis_checkin/screens/plan_editor_screen.dart';
+import 'package:metamorphosis_checkin/screens/posture_screen.dart';
 import 'package:metamorphosis_checkin/services/user_profile_service.dart';
 import 'package:metamorphosis_checkin/services/check_in_service.dart';
 import 'package:metamorphosis_checkin/services/workout_service.dart';
 import 'package:metamorphosis_checkin/services/workout_plan_service.dart';
 import 'package:metamorphosis_checkin/services/debug_upload_service.dart';
+import 'package:metamorphosis_checkin/services/app_settings_service.dart';
+import 'package:metamorphosis_checkin/widgets/app_background.dart';
 import 'package:metamorphosis_checkin/database/app_database.dart';
 
 class MetamorphosisApp extends StatelessWidget {
@@ -28,7 +33,8 @@ class MetamorphosisApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UserProfileService()..init()),
         ChangeNotifierProvider(create: (_) => CheckInService()..init()),
         ChangeNotifierProvider(create: (_) => WorkoutService()..init()),
-        ChangeNotifierProvider(create: (_) => WorkoutPlanService()),
+        ChangeNotifierProvider(create: (_) => WorkoutPlanService()..init()),
+        ChangeNotifierProvider(create: (_) => AppSettingsService()..init()),
         ChangeNotifierProvider(create: (_) => DebugUploadService()),
       ],
       child: MaterialApp(
@@ -39,6 +45,9 @@ class MetamorphosisApp extends StatelessWidget {
         routes: {
           '/home': (_) => const MainScreen(),
           '/onboarding': (_) => const OnboardingScreen(),
+          '/appearance': (_) => const AppearanceScreen(),
+          '/plans': (_) => const PlanEditorScreen(),
+          '/posture': (_) => const PostureScreen(),
         },
         home: const _AppInitializer(),
       ),
@@ -119,19 +128,9 @@ class _MainScreenState extends State<MainScreen> {
         //   interactionIntensity > 0.01 && _effectiveKey != null。
         // 代价仅是底部指示器失去背景折射采样；它本身已是 blur:0 + 低透明度，
         // 视觉差异可忽略。
-        const DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF0a0a1a),
-                Color(0xFF1a1a2e),
-                Color(0xFF16213e),
-              ],
-            ),
-          ),
-        ),
+        // 背景由 AppBackground 渲染：内置渐变预设或用户自定义图片，
+        // 并叠加模糊与压暗调节（见「我的 → 外观设置」）。
+        const AppBackground(),
         Scaffold(
           backgroundColor: Colors.transparent,
           extendBody: true,

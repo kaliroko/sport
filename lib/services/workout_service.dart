@@ -32,6 +32,29 @@ class WorkoutService with ChangeNotifier {
     notifyListeners();
   }
 
+  /// 今日某动作已完成的组数。
+  ///
+  /// 直接由今日的 workout_logs 派生，而不是放在页面 State 里 ——
+  /// 切 Tab 会销毁重建页面，App 重启也会丢内存状态，
+  /// 从数据库派生才能保证训练进度不丢。
+  int completedSetsFor(String exerciseName) {
+    final today = DateTime.now().toIso8601String().split('T').first;
+    return _logs
+        .where((log) => log.date == today && log.exerciseName == exerciseName)
+        .length;
+  }
+
+  /// 今日已记录的总组数
+  int get todaySetCount {
+    final today = DateTime.now().toIso8601String().split('T').first;
+    return _logs.where((log) => log.date == today).length;
+  }
+
+  /// 今日已完成动作数 / 总动作数（用于训练页进度展示）
+  int completedExerciseCount(List<String> exerciseNames) {
+    return exerciseNames.where((n) => completedSetsFor(n) > 0).length;
+  }
+
   /// 获取今日运动日志
   List<WorkoutLog> getTodayLogs() {
     final today = DateTime.now().toIso8601String().split('T').first;

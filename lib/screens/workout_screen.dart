@@ -6,10 +6,12 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:metamorphosis_checkin/services/user_profile_service.dart';
 import 'package:metamorphosis_checkin/services/workout_plan_service.dart';
+import 'package:metamorphosis_checkin/services/workout_service.dart';
 import 'package:metamorphosis_checkin/utils/constants.dart';
-import 'package:metamorphosis_checkin/models/workout_plan.dart';
 import 'package:metamorphosis_checkin/theme/app_theme.dart';
 import 'package:metamorphosis_checkin/utils/responsive_utils.dart';
+import 'package:metamorphosis_checkin/utils/workout_target.dart';
+import 'package:metamorphosis_checkin/screens/live_workout_screen.dart';
 
 class WorkoutScreen extends StatelessWidget {
   const WorkoutScreen({super.key});
@@ -26,31 +28,33 @@ class _WorkoutScreenContent extends StatefulWidget {
 }
 
 class _WorkoutScreenContentState extends State<_WorkoutScreenContent>
-    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => false;
 
-  int? _selectedExerciseIndex;
-  bool _isTimerActive = false;
-  int _timerSeconds = 0;
-  late AnimationController _timerController;
+  // ─── 说明 ──────────────────────────────────────────────────────────────────
+  // 本页只负责「展示今日动作 + 进入训练」。
+  // 打卡全部走实时监督训练页（LiveWorkoutScreen）：计时跑完才会写入
+  // workout_logs，因此这里**没有**任何"点一下就打卡"的入口。
+  // 已完成组数也由今日日志派生（WorkoutService.completedSetsFor），
+  // 所以切 Tab（页面会被销毁重建）甚至重启 App，进度都不会丢。
 
   @override
   void initState() {
     super.initState();
-    _timerController = AnimationController(vsync: this, duration: const Duration(seconds: 1));
-  }
-
-  @override
-  void dispose() {
-    _timerController.dispose();
-    super.dispose();
+    // 重新拉一次日志，从数据库恢复今日训练进度
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<WorkoutService>().init();
+    });
   }
 
   // ─── 卡路里估算（kcal）─────────────────────────────────────────────────────
-  double estimateCalories(MovementConfig movement, int durationMinutes) {
-    // MET 值参考（每小时 kcal/kg）× 体重(kg) × 小时数
-    final metValues = {
+  /// 原实现把 weekConfig 里的数字（例如「3组×15个」的 15）当作**分钟数**传入，
+  /// 于是 15 个俯卧撑被折算成 15 分钟的运动量，数值严重虚高。
+  /// 现在按「组数 × 每组时长」计算：计时型取目标秒数，次数型按每次约 3 秒估算。
+  double _estimateCalories(MovementConfig movement, SetTarget target) {
+    // MET 值参考（每小时 kcal/kg）
+    const metValues = {
       '胸': 3.5, '三头肌': 3.0, '肩': 3.0,
       '腿': 4.0, '臀': 3.5, '大腿': 4.0,
       '核心': 3.5, '上腹': 3.5, '下腹': 3.5,
@@ -61,69 +65,19 @@ class _WorkoutScreenContentState extends State<_WorkoutScreenContent>
     for (final key in metValues.keys) {
       if (movement.targetMuscle.contains(key)) { met = metValues[key]!; break; }
     }
-    final profile = context.read<UserProfileService>().profile;
-    final weight = profile?.weightKg ?? 65;
-    return met * weight * (durationMinutes / 60);
+    final weight = context.read<UserProfileService>().profile?.weightKg ?? 65;
+    final perSetSeconds = target.seconds > 0 ? target.seconds : target.reps * 3;
+    final totalHours = (perSetSeconds * target.sets) / 3600.0;
+    return met * weight * totalHours;
   }
 
-  void startTimer(int seconds) {
-    setState(() { _timerSeconds = seconds; _isTimerActive = true; });
-    _timerController.forward(from: 0);
-    _tickTimer();
-  }
-
-  void _tickTimer() {
-    Future.delayed(const Duration(seconds: 1), () {
-      if (mounted && _isTimerActive) {
-        setState(() {
-          _timerSeconds--;
-          if (_timerSeconds <= 0) {
-            _isTimerActive = false;
-            _timerController.stop();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: const Row(children: [Icon(Icons.check_circle, color: Colors.white), SizedBox(width: 8), Text('计时完成！')]),
-                backgroundColor: AppTheme.successColor, behavior: SnackBarBehavior.floating),
-            );
-          }
-        });
-        if (_isTimerActive) _tickTimer();
-      }
-    });
-  }
-
-  void stopTimer() {
-    setState(() => _isTimerActive = false);
-    _timerController.stop();
-  }
-
-  void _startExercise(MovementConfig movement, String weekConfig) {
-    setState(() => _selectedExerciseIndex = getTodayMovements().indexOf(movement));
-    if (movement.type == MovementType.duration) {
-      final match = RegExp(r'(\d+)秒').firstMatch(weekConfig);
-      final seconds = int.tryParse(match?.group(1) ?? '40') ?? 40;
-      startTimer(seconds);
-    }
-    if (movement.type == MovementType.reps) {
-      _showRepStartDialog(movement, weekConfig);
-    }
-  }
-
-  Future<void> _showRepStartDialog(MovementConfig movement, String config) async {
-    await GlassDialog.show<void>(
-      context: context,
-      title: movement.name,
-      content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('目标: $config', style: TextStyle(color: AppTheme.secondaryColor, fontSize: 16, fontWeight: FontWeight.w600)),
-        SizedBox(height: 12),
-        Text('动作要领: ${movement.description}', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
-        if (movement.commonMistakes.isNotEmpty) ...[
-          SizedBox(height: 8),
-          Text('注意:', style: TextStyle(color: AppTheme.errorColor, fontSize: 12, fontWeight: FontWeight.w500)),
-          ...movement.commonMistakes.map((m) => Padding(padding: const EdgeInsets.only(left: 8, top: 2), child: Text('✗ $m', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)))),
-        ],
-      ]),
-      actions: [GlassDialogAction(label: '了解了', isPrimary: true, onPressed: () => Navigator.pop(context))],
-    );
+  /// 打开实时监督训练。
+  /// [startAt] 指定从第几个动作开始（点某张卡片进来时传它）；
+  /// 为 null 时从第一个还没做满的动作继续。
+  void _openLiveWorkout(List<MovementConfig> movements, {int? startAt}) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => LiveWorkoutScreen(movements: movements, initialIndex: startAt),
+    ));
   }
 
   // ─── 获取今日训练内容 ───────────────────────────────────────────────────────
@@ -139,7 +93,7 @@ class _WorkoutScreenContentState extends State<_WorkoutScreenContent>
 
   String getSelectedPlanName() {
     final planService = context.read<WorkoutPlanService>();
-    return WorkoutPlans.all.firstWhere((p) => p.id == planService.selectedPlanId, orElse: () => WorkoutPlans.planBeginnerFatLoss).name;
+    return context.read<WorkoutPlanService>().selectedPlan.name;
   }
 
   @override
@@ -151,7 +105,7 @@ class _WorkoutScreenContentState extends State<_WorkoutScreenContent>
     final profile = context.watch<UserProfileService>().profile;
     final week = profile?.currentWeek ?? 1;
     final phaseName = ['适应期', '减脂期', '塑形期', '冲刺期'][(week - 1) ~/ 2 % 4];
-    final selectedPlan = WorkoutPlans.all.firstWhere((p) => p.id == planService.selectedPlanId, orElse: () => WorkoutPlans.planBeginnerFatLoss);
+    final selectedPlan = planService.selectedPlan;
     final currentDay = planService.currentDay;
 
     return AdaptiveLiquidGlassLayer(
@@ -190,6 +144,21 @@ class _WorkoutScreenContentState extends State<_WorkoutScreenContent>
                   ),
                   SizedBox(height: 6),
                   Text('第${currentDay}天 / ${selectedPlan.durationDays}天 · $phaseName', style: TextStyle(color: AppTheme.textSecondary, fontSize: ResponsiveUtils.scaleFont(context, 13))),
+                  if (movements.isNotEmpty) ...[
+                    SizedBox(height: ResponsiveUtils.scaleSpacing(context, 12)),
+                    _TrainingProgressBar(movements: movements, week: week),
+                    SizedBox(height: ResponsiveUtils.scaleSpacing(context, 10)),
+                    GlassButton.custom(
+                      onTap: () => _openLiveWorkout(movements),
+                      width: double.infinity,
+                      height: ResponsiveUtils.scaleButtonHeight(context, 52),
+                      child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        Icon(Icons.play_circle_fill, color: Colors.white, size: 22),
+                        SizedBox(width: 8),
+                        Text('开始实时训练', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
+                      ]),
+                    ),
+                  ],
                   SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16)),
                 ]),
               ),
@@ -210,14 +179,17 @@ class _WorkoutScreenContentState extends State<_WorkoutScreenContent>
                   (context, index) {
                     final movement = movements[index];
                     final weekConfig = _getWeekConfig(movement, week);
-                    final calories = estimateCalories(movement, int.tryParse(weekConfig.split('×').last.replaceAll(RegExp(r'[^\d]'), '')) ?? 40);
+                    final target = parseSetTarget(movement, weekConfig);
+                    final doneSets = context.watch<WorkoutService>().completedSetsFor(movement.name);
                     return Padding(
                       padding: EdgeInsets.only(bottom: ResponsiveUtils.scaleSpacing(context, 12)),
                       child: _ExerciseCard(
                         movement: movement,
                         weekConfig: weekConfig,
-                        calories: calories,
-                        onTap: () => _startExercise(movement, weekConfig),
+                        calories: _estimateCalories(movement, target),
+                        completedSets: doneSets,
+                        targetSets: target.sets,
+                        onOpen: () => _openLiveWorkout(movements, startAt: index),
                       ),
                     );
                   },
@@ -226,25 +198,15 @@ class _WorkoutScreenContentState extends State<_WorkoutScreenContent>
               ),
             ),
 
-          // 计时器浮动窗口
-          if (_selectedExerciseIndex != null && _isTimerActive)
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _TimerFloatingHeader(seconds: _timerSeconds, onStop: stopTimer),
-            ),
-
+          // 倒计时与组间休息都在实时训练页里，这里不再需要浮动计时条
           SliverToBoxAdapter(child: SizedBox(height: ResponsiveUtils.bottomSafePadding(context))),
         ],
       ),
     );
   }
 
-  String _getWeekConfig(MovementConfig movement, int week) {
-    if (week <= 2) return movement.week1;
-    if (week <= 4) return movement.week3;
-    if (week <= 6) return movement.week5;
-    return movement.week7;
-  }
+  String _getWeekConfig(MovementConfig movement, int week) =>
+      weekConfigFor(movement, week);
 
   Widget _buildRestDayContent() {
     final suggestions = [
@@ -280,7 +242,7 @@ Future<void> _showPlanSelector(BuildContext context, WorkoutPlanService planServ
   final planId = await GlassDialog.show<String?>(
     context: context,
     title: '选择训练计划',
-      content: Column(mainAxisSize: MainAxisSize.min, children: WorkoutPlans.all.map((plan) {
+      content: Column(mainAxisSize: MainAxisSize.min, children: planService.availablePlans.map((plan) {
         final isSelected = plan.id == planService.selectedPlanId;
         return GestureDetector(
           onTap: () => Navigator.pop(context, plan.id),
@@ -333,12 +295,26 @@ class _ExerciseCard extends StatelessWidget {
   final MovementConfig movement;
   final String weekConfig;
   final double calories;
-  final VoidCallback onTap;
-  const _ExerciseCard({required this.movement, required this.weekConfig, required this.calories, required this.onTap});
+  final int completedSets;
+  final int targetSets;
+  final VoidCallback onOpen;
+  const _ExerciseCard({
+    required this.movement,
+    required this.weekConfig,
+    required this.calories,
+    required this.completedSets,
+    required this.targetSets,
+    required this.onOpen,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
+    final bool isFinished = targetSets > 0 && completedSets >= targetSets;
+    // 整张卡片可点击 → 进入实时监督训练（会自动从没做完的那一组继续）。
+    // 卡片内的「完成这一组」按钮自带点击处理，不会误触发这里。
+    return GestureDetector(
+      onTap: onOpen,
+      child: GlassCard(
       padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 14)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
@@ -366,53 +342,119 @@ class _ExerciseCard extends StatelessWidget {
             child: Text('✗ $m', style: TextStyle(color: AppTheme.errorColor, fontSize: 10)),
           )).toList()),
         ],
+        SizedBox(height: 10),
+        // 组进度：每完成一组点亮一个点。已完成组数来自今日 workout_logs，
+        // 所以切 Tab / 重启后依然是准的。
+        Row(children: [
+          ...List.generate(targetSets, (i) {
+            final bool filled = i < completedSets;
+            return Container(
+              margin: EdgeInsets.only(right: ResponsiveUtils.scaleSpacing(context, 6)),
+              width: ResponsiveUtils.scaleSize(context, 22),
+              height: ResponsiveUtils.scaleSize(context, 6),
+              decoration: BoxDecoration(
+                color: filled ? AppTheme.successColor : Colors.white.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(3),
+              ),
+            );
+          }),
+          const SizedBox(width: 4),
+          Text('$completedSets / $targetSets 组',
+              style: TextStyle(
+                color: isFinished ? AppTheme.successColor : AppTheme.textSecondary,
+                fontSize: ResponsiveUtils.scaleFont(context, 11),
+                fontWeight: FontWeight.w600,
+              )),
+        ]),
+        SizedBox(height: 8),
+        Row(children: [
+          const Icon(Icons.touch_app, color: AppTheme.textHint, size: 12),
+          SizedBox(width: ResponsiveUtils.scaleSpacing(context, 4)),
+          Text('点击卡片进入实时训练',
+              style: TextStyle(color: AppTheme.textHint, fontSize: ResponsiveUtils.scaleFont(context, 10))),
+        ]),
         SizedBox(height: 12),
         GlassButton.custom(
-          onTap: onTap,
+          onTap: onOpen,
           width: double.infinity,
           height: ResponsiveUtils.scaleButtonHeight(context, 46),
           child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(movement.type == MovementType.duration ? Icons.timer : Icons.fitness_center, color: Colors.white, size: 18),
+            Icon(
+              isFinished ? Icons.check_circle : Icons.play_circle_fill,
+              color: Colors.white,
+              size: 18,
+            ),
             SizedBox(width: 6),
-            Text(movement.type == MovementType.duration ? '开始计时' : '开始训练', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+            Text(
+              isFinished ? '已完成（可重练）' : '开始本组训练',
+              style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+            ),
             const Spacer(),
-            Text('≈${calories.toStringAsFixed(0)} kcal', style: TextStyle(color: AppTheme.warningColor, fontSize: 12)),
+            Text('≈${calories.toStringAsFixed(1)} kcal', style: TextStyle(color: AppTheme.warningColor, fontSize: 12)),
           ]),
         ),
       ]),
+      ),
     );
   }
 }
 
-// ─── 计时器浮动头 ─────────────────────────────────────────────────────────────
-class _TimerFloatingHeader extends SliverPersistentHeaderDelegate {
-  final int seconds;
-  final VoidCallback onStop;
-  _TimerFloatingHeader({required this.seconds, required this.onStop});
+// ─── 今日训练进度 ─────────────────────────────────────────────────────────────
+class _TrainingProgressBar extends StatelessWidget {
+  final List<MovementConfig> movements;
+  final int week;
+  const _TrainingProgressBar({required this.movements, required this.week});
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(margin: EdgeInsets.fromLTRB(16, 0, 16, 12), child: GlassCard(
-      padding: EdgeInsets.all(16),
-      child: Row(children: [
-        const Icon(Icons.timer, color: AppTheme.warningColor),
-        SizedBox(width: 12),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('组间休息', style: TextStyle(color: Colors.white, fontSize: 14)),
-          Text('$seconds 秒', style: TextStyle(color: AppTheme.warningColor, fontSize: 24, fontWeight: FontWeight.bold)),
-        ])),
-        GlassButton.custom(onTap: onStop, height: 48, child: const Text('完成', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600))),
+  Widget build(BuildContext context) {
+    final workoutService = context.watch<WorkoutService>();
+
+    int doneSets = 0;
+    int totalSets = 0;
+    for (final m in movements) {
+      final target = parseSetTarget(m, weekConfigFor(m, week));
+      totalSets += target.sets;
+      final done = workoutService.completedSetsFor(m.name);
+      doneSets += done > target.sets ? target.sets : done;
+    }
+    final bool finished = totalSets > 0 && doneSets >= totalSets;
+    final double ratio = totalSets == 0 ? 0.0 : doneSets / totalSets;
+
+    return GlassCard(
+      padding: EdgeInsets.all(ResponsiveUtils.scalePadding(context, 14)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Row(children: [
+            Icon(
+              finished ? Icons.emoji_events : Icons.fitness_center,
+              size: ResponsiveUtils.scaleIcon(context, 16),
+              color: finished ? AppTheme.successColor : AppTheme.primaryColor,
+            ),
+            SizedBox(width: ResponsiveUtils.scaleSpacing(context, 6)),
+            Text('今日训练进度',
+                style: TextStyle(color: Colors.white, fontSize: ResponsiveUtils.scaleFont(context, 13), fontWeight: FontWeight.w600)),
+          ]),
+          Text('$doneSets / $totalSets 组',
+              style: TextStyle(
+                color: finished ? AppTheme.successColor : AppTheme.textSecondary,
+                fontSize: ResponsiveUtils.scaleFont(context, 12),
+                fontWeight: FontWeight.w600,
+              )),
+        ]),
+        SizedBox(height: ResponsiveUtils.scaleSpacing(context, 8)),
+        LinearProgressIndicator(
+          value: ratio.clamp(0.0, 1.0),
+          minHeight: 6,
+          borderRadius: BorderRadius.circular(3),
+          color: finished ? AppTheme.successColor : AppTheme.primaryColor,
+          backgroundColor: Colors.white.withValues(alpha: 0.1),
+        ),
+        if (finished) ...[
+          SizedBox(height: ResponsiveUtils.scaleSpacing(context, 6)),
+          Text('全部完成，已自动同步到首页「运动完成」打卡 ✅',
+              style: TextStyle(color: AppTheme.successColor, fontSize: ResponsiveUtils.scaleFont(context, 11))),
+        ],
       ]),
-    ));
-  }
-
-  @override
-  double get maxExtent => 80;
-  @override
-  double get minExtent => 80;
-  @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
-    final old = oldDelegate as _TimerFloatingHeader;
-    return seconds != old.seconds;
+    );
   }
 }

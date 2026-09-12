@@ -29,6 +29,9 @@ dependencies:
   permission_handler: ^11.1.0
   timezone: ^0.11.1
 
+  # 语音播报（训练时报数/计时，不用盯屏幕）
+  flutter_tts: ^4.0.0
+
   # 图表
   fl_chart: ^0.65.0
 
