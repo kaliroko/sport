@@ -6,6 +6,7 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:metamorphosis_checkin/services/check_in_service.dart';
 import 'package:metamorphosis_checkin/models/custom_task.dart';
+import 'package:metamorphosis_checkin/models/daily_check_in.dart';
 import 'package:metamorphosis_checkin/utils/constants.dart';
 import 'package:metamorphosis_checkin/utils/md3_spring_curve.dart';
 import 'package:metamorphosis_checkin/widgets/task_card.dart';
@@ -36,7 +37,6 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
   late AnimationController _checkController;
   late Animation<double> _checkAnimation;
   bool _showCelebration = false;
-  String? _lastCheckedTask;
 
   @override
   void initState() {
@@ -293,6 +293,34 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
   }
 }
 
+// ─── 统计行 ────────────────────────────────────────────────────────────────────
+class _StatRow extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final String value;
+  final String sub;
+  const _StatRow({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.value,
+    required this.sub,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return Row(children: [
+      Icon(icon, color: iconColor, size: 18),
+      SizedBox(width: 6),
+      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(label, style: TextStyle(color: AppTheme.textSecondary, fontSize: 11)),
+        Text(value, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+        Text(sub, style: TextStyle(color: AppTheme.textHint, fontSize: 10)),
+      ]),
+    ]);
+  }
+}
+
 // ─── 心情选择器 ────────────────────────────────────────────────────────────────
 class _MoodSelector extends StatelessWidget {
   final CheckInService service;
@@ -438,29 +466,26 @@ Future<void> _showAddCustomTaskDialog(BuildContext context, CheckInService servi
   final icons = ['⭐', '🌟', '💪', '📚', '🏃', '🧘', '🎯', '💤', '🥗', '💊', '✍️', '🎵'];
   String selectedIcon = '⭐';
 
-  await showDialog(
+  await GlassDialog.show<String?>(
     context: context,
-    builder: (_) => GlassDialog.show<String?>(
-      context: context,
-      title: '添加新习惯',
-      content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-        TextField(controller: nameCtrl, style: const TextStyle(color: Colors.white), decoration: InputDecoration(labelText: '习惯名称', labelStyle: TextStyle(color: AppTheme.textSecondary), prefixIcon: Icon(Icons.edit, color: AppTheme.primaryColor), filled: true, fillColor: Colors.white.withValues(alpha: 0.08), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none))),
-        SizedBox(height: 16),
-        Wrap(spacing: 8, runSpacing: 8, children: icons.map((e) => GestureDetector(onTap: () => Navigator.pop(context, e), child: Container(width: 40, height: 40, decoration: BoxDecoration(color: selectedIcon == e ? AppTheme.primaryColor.withValues(alpha: 0.4) : Colors.white.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)), child: Center(child: Text(e, style: const TextStyle(fontSize: 20)))))).toList()),
-      ]),
-      actions: [
-        GlassDialogAction(label: '取消', onPressed: () => Navigator.pop(context)),
-        GlassDialogAction(label: '保存', isPrimary: true, onPressed: () async {
-          final name = nameCtrl.text.trim();
-          if (name.isEmpty) return;
-          final id = 'custom_${DateTime.now().millisecondsSinceEpoch}';
-          await DatabaseManager.customTaskRepository.insert(CustomTask(id: id, name: name, icon: selectedIcon));
-          service.notifyListeners();
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('「$name」已添加'), backgroundColor: AppTheme.successColor, behavior: SnackBarBehavior.floating));
-        }),
-      ],
-    ),
+    title: '添加新习惯',
+    content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+      TextField(controller: nameCtrl, style: const TextStyle(color: Colors.white), decoration: InputDecoration(labelText: '习惯名称', labelStyle: TextStyle(color: AppTheme.textSecondary), prefixIcon: Icon(Icons.edit, color: AppTheme.primaryColor), filled: true, fillColor: Colors.white.withValues(alpha: 0.08), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none))),
+      SizedBox(height: 16),
+      Wrap(spacing: 8, runSpacing: 8, children: icons.map((e) => GestureDetector(onTap: () => Navigator.of(context).pop(e), child: Container(width: 40, height: 40, decoration: BoxDecoration(color: selectedIcon == e ? AppTheme.primaryColor.withValues(alpha: 0.4) : Colors.white.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)), child: Center(child: Text(e, style: const TextStyle(fontSize: 20)))))).toList()),
+    ]),
+    actions: [
+      GlassDialogAction(label: '取消', onPressed: () => Navigator.of(context).pop()),
+      GlassDialogAction(label: '保存', isPrimary: true, onPressed: () async {
+        final name = nameCtrl.text.trim();
+        if (name.isEmpty) return;
+        final id = 'custom_${DateTime.now().millisecondsSinceEpoch}';
+        await DatabaseManager.customTaskRepository.insert(CustomTask(id: id, name: name, icon: selectedIcon));
+        service.refresh();
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('「$name」已添加'), backgroundColor: AppTheme.successColor, behavior: SnackBarBehavior.floating));
+      }),
+    ],
   );
 }
 
@@ -468,7 +493,7 @@ Future<void> _confirmDeleteCustomTask(BuildContext context, CheckInService servi
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (_) => AlertDialog(
-      backgroundColor: AppTheme.glassColor,
+      backgroundColor: AppTheme.backgroundColor,
       title: Text('删除习惯', style: TextStyle(color: Colors.white)),
       content: Text('确定要删除「${task.name}」吗？', style: TextStyle(color: AppTheme.textSecondary)),
       actions: [
@@ -479,7 +504,7 @@ Future<void> _confirmDeleteCustomTask(BuildContext context, CheckInService servi
   );
   if (confirmed == true && context.mounted) {
     await DatabaseManager.customTaskRepository.delete(task.id);
-    service.notifyListeners();
+    service.refresh();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已删除「${task.name}」'), backgroundColor: AppTheme.infoColor, behavior: SnackBarBehavior.floating));
   }
 }

@@ -222,13 +222,13 @@ class _WeightTrendChart extends StatelessWidget {
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           Text('体重趋势', style: TextStyle(color: Colors.white, fontSize: ResponsiveUtils.scaleFont(context, 16), fontWeight: FontWeight.bold)),
           Container(padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: AppTheme.successColor.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
-            child: Text('目标: ${(profile.targetWeightKg).toStringAsFixed(1)}kg', style: TextStyle(color: AppTheme.successColor, fontSize: 12))),
+            child: Text('目标: ${(profile.weightKg * 0.9).toStringAsFixed(1)}kg', style: TextStyle(color: AppTheme.successColor, fontSize: 12))),
         ]),
         SizedBox(height: 16),
         Row(children: [
           Expanded(child: _WeightStat(icon: Icons.monitor_weight, label: '当前体重', value: '${profile.weightKg.toStringAsFixed(1)}kg')),
-          Expanded(child: _WeightStat(icon: Icons.trending_down, label: '目标体重', value: '${profile.targetWeightKg.toStringAsFixed(1)}kg')),
-          Expanded(child: _WeightStat(icon: Icons.arrow_downward, label: '还需减', value: '${(profile.weightKg - profile.targetWeightKg).toStringAsFixed(1)}kg')),
+          Expanded(child: _WeightStat(icon: Icons.trending_down, label: '目标体重', value: '${(profile.weightKg * 0.9).toStringAsFixed(1)}kg')),
+          Expanded(child: _WeightStat(icon: Icons.arrow_downward, label: '还需减', value: '${(profile.weightKg * 0.1).toStringAsFixed(1)}kg')),
         ]),
       ]),
     );

@@ -192,7 +192,7 @@ class WorkoutPlans {
     MovementConfig(
       name: '俄罗斯转体', targetMuscle: '腹斜肌',
       description: '坐姿屈膝，双手持物左右转动躯干',
-      commonMistases: ['腰部离地', '转动不够'], week1: '3组×16次', week3: '3组×20次',
+      commonMistakes: ['腰部离地', '转动不够'], week1: '3组×16次', week3: '3组×20次',
       week5: '3组×24次', week7: '3组×30次', type: MovementType.reps, restTime: '30秒',
     ),
     MovementConfig(

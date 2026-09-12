@@ -151,11 +151,9 @@ class _ProfileScreenContentState extends State<_ProfileScreenContent> with Autom
     final heightCtrl = TextEditingController(text: profile.heightCm.toStringAsFixed(0));
     final weightCtrl = TextEditingController(text: profile.weightKg.toStringAsFixed(1));
 
-    await showDialog(
+    await GlassDialog.show<String?>(
       context: context,
-      builder: (_) => GlassDialog.show<String?>(
-        context: context,
-        title: '编辑资料',
+      title: '编辑资料',
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -234,11 +232,9 @@ class _ProfileScreenContentState extends State<_ProfileScreenContent> with Autom
   Future<void> _showPhaseSelector(BuildContext context) async {
     final profile = context.read<UserProfileService>().profile;
     final currentWeek = profile?.currentWeek ?? 1;
-    await showDialog(
+    await GlassDialog.show<int?>(
       context: context,
-      builder: (_) => GlassDialog.show<int?>(
-        context: context,
-        title: '选择训练阶段',
+      title: '选择训练阶段',
         message: '选择你当前所在阶段，系统将调整训练计划难度',
         content: Wrap(
           spacing: 10,
@@ -288,71 +284,66 @@ class _ProfileScreenContentState extends State<_ProfileScreenContent> with Autom
     bool waterConfirmed = false;
     bool sleepConfirmed = false;
 
-    await showDialog(
+    await GlassDialog.show<void>(
       context: context,
-      builder: (_) => StatefulBuilder(
-        builder: (ctx, setDlgState) => GlassDialog.show<void>(
-          context: ctx,
-          title: '提醒设置',
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ListTile(
-                leading: Icon(Icons.water_drop, color: AppTheme.primaryColor),
-                title: Text('喝水提醒', style: TextStyle(color: Colors.white)),
-                subtitle: Text('每天 09:00 / 11:00 / 14:00 / 16:00 / 19:00', style: TextStyle(color: AppTheme.textSecondary, fontSize: 11)),
-                trailing: Switch(value: waterEnabled, onChanged: (v) => setDlgState(() => waterEnabled = v)),
-              ),
-              Divider(color: AppTheme.textHint),
-              ListTile(
-                leading: Icon(Icons.bedtime, color: AppTheme.infoColor),
-                title: Text('早睡提醒', style: TextStyle(color: Colors.white)),
-                subtitle: Text('每天 22:00 提醒', style: TextStyle(color: AppTheme.textSecondary, fontSize: 11)),
-                trailing: Switch(value: sleepEnabled, onChanged: (v) => setDlgState(() => sleepEnabled = v)),
-              ),
-              SizedBox(height: 12),
-              if (waterEnabled)
-                TextField(controller: waterCtrl, style: const TextStyle(color: Colors.white), decoration: InputDecoration(labelText: '早起提醒时间', labelStyle: TextStyle(color: AppTheme.textSecondary), prefixIcon: Icon(Icons.water_drop, color: AppTheme.primaryColor), filled: true, fillColor: Colors.white.withValues(alpha: 0.08), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none))),
-              if (sleepEnabled) ...[
-                SizedBox(height: 8),
-                TextField(controller: sleepCtrl, style: const TextStyle(color: Colors.white), decoration: InputDecoration(labelText: '早睡提醒时间', labelStyle: TextStyle(color: AppTheme.textSecondary), prefixIcon: Icon(Icons.bedtime, color: AppTheme.infoColor), filled: true, fillColor: Colors.white.withValues(alpha: 0.08), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none))),
-              ],
-            ],
-          ),
-          actions: [
-            GlassDialogAction(label: '取消', onPressed: () => Navigator.pop(ctx)),
-            GlassDialogAction(
-              label: '保存',
-              isPrimary: true,
-              onPressed: () async {
-                if (waterEnabled) {
-                  await notificationService.scheduleWaterReminder(9, 0);
-                  setDlgState(() => waterConfirmed = true);
-                }
-                if (sleepEnabled) {
-                  await notificationService.scheduleDailyReminder(id: 999, title: '早点休息', body: '今晚争取23点前入睡！', DateTime.now().add(const Duration(days: 1)).replace(hour: 22, minute: 0));
-                  setDlgState(() => sleepConfirmed = true);
-                }
-                if (waterConfirmed || sleepConfirmed) {
-                  Navigator.pop(ctx);
-                  if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('提醒已设置 ✓'), backgroundColor: AppTheme.successColor, behavior: SnackBarBehavior.floating));
-                }
-              },
+      title: '提醒设置',
+      content: StatefulBuilder(
+        builder: (ctx, setDlgState) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              leading: Icon(Icons.water_drop, color: AppTheme.primaryColor),
+              title: Text('喝水提醒', style: TextStyle(color: Colors.white)),
+              subtitle: Text('每天 09:00 / 11:00 / 14:00 / 16:00 / 19:00', style: TextStyle(color: AppTheme.textSecondary, fontSize: 11)),
+              trailing: Switch(value: waterEnabled, onChanged: (v) => setDlgState(() => waterEnabled = v)),
             ),
+            Divider(color: AppTheme.textHint),
+            ListTile(
+              leading: Icon(Icons.bedtime, color: AppTheme.infoColor),
+              title: Text('早睡提醒', style: TextStyle(color: Colors.white)),
+              subtitle: Text('每天 22:00 提醒', style: TextStyle(color: AppTheme.textSecondary, fontSize: 11)),
+              trailing: Switch(value: sleepEnabled, onChanged: (v) => setDlgState(() => sleepEnabled = v)),
+            ),
+            SizedBox(height: 12),
+            if (waterEnabled)
+              TextField(controller: waterCtrl, style: const TextStyle(color: Colors.white), decoration: InputDecoration(labelText: '早起提醒时间', labelStyle: TextStyle(color: AppTheme.textSecondary), prefixIcon: Icon(Icons.water_drop, color: AppTheme.primaryColor), filled: true, fillColor: Colors.white.withValues(alpha: 0.08), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none))),
+            if (sleepEnabled) ...[
+              SizedBox(height: 8),
+              TextField(controller: sleepCtrl, style: const TextStyle(color: Colors.white), decoration: InputDecoration(labelText: '早睡提醒时间', labelStyle: TextStyle(color: AppTheme.textSecondary), prefixIcon: Icon(Icons.bedtime, color: AppTheme.infoColor), filled: true, fillColor: Colors.white.withValues(alpha: 0.08), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none))),
+            ],
           ],
         ),
       ),
+      actions: [
+        GlassDialogAction(label: '取消', onPressed: () => Navigator.pop(context)),
+        GlassDialogAction(
+          label: '保存',
+          isPrimary: true,
+          onPressed: () async {
+            if (waterEnabled) {
+              await notificationService.scheduleWaterReminder(9, 0);
+              setDlgState(() => waterConfirmed = true);
+            }
+            if (sleepEnabled) {
+              await notificationService.scheduleDailyReminder(id: 999, title: '早点休息', body: '今晚争取23点前入睡！', time: DateTime.now().add(const Duration(days: 1)).copyWith(hour: 22, minute: 0));
+              setDlgState(() => sleepConfirmed = true);
+            }
+            if (waterConfirmed || sleepConfirmed) {
+              Navigator.pop(context);
+              if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('提醒已设置 ✓'), backgroundColor: AppTheme.successColor, behavior: SnackBarBehavior.floating));
+            }
+          },
+        ),
+      ],
     );
   }
 
   // ─── 导出数据 ──────────────────────────────────────────────────────────────
   void _showExportDialog(BuildContext context) {
-    showDialog(
+    GlassDialog.show<void>(
       context: context,
-      builder: (_) => GlassDialog.show<void>(
-        context: context,
-        title: '导出数据',
+      title: '导出数据',
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -755,7 +746,7 @@ class _WeeklyProgressCard extends StatelessWidget {
                 child: Column(
                   children: [
                     Icon(
-                      isTrainingToday ? Icons.fitness_center : Icons.rest_area,
+                      isTrainingToday ? Icons.fitness_center : Icons.bedtime,
                       color: isTrainingToday ? AppTheme.warningColor : AppTheme.textSecondary,
                       size: ResponsiveUtils.scaleIcon(context, 20),
                     ),
@@ -826,7 +817,7 @@ class _WeeklyProgressCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _LegendDot(color: AppTheme.primaryColor, label: '今日'),
+              _LegendDot(color: AppTheme.primaryColor, alpha: 1.0, label: '今日'),
               SizedBox(width: 12),
               _LegendDot(color: AppTheme.primaryColor, alpha: 0.25, label: '训练日'),
               SizedBox(width: 12),
@@ -942,22 +933,22 @@ class _DebugSection extends StatelessWidget {
   Future<void> _uploadWorkoutOnly(BuildContext context) async {
     final service = context.read<DebugUploadService>();
     final result = await service.uploadWorkoutData();
-    if (context.mounted) _showResult(result);
+    if (context.mounted) _showResult(context, result);
   }
 
   Future<void> _uploadCheckInOnly(BuildContext context) async {
     final service = context.read<DebugUploadService>();
     final result = await service.uploadCheckInData();
-    if (context.mounted) _showResult(result);
+    if (context.mounted) _showResult(context, result);
   }
 
   Future<void> _testConnection(BuildContext context) async {
     final service = context.read<DebugUploadService>();
     final result = await service.testConnection();
-    if (context.mounted) _showResult(result);
+    if (context.mounted) _showResult(context, result);
   }
 
-  void _showResult(dynamic result) {
+  void _showResult(BuildContext context, dynamic result) {
     final success = result is Map && (result['success'] as bool? ?? false);
     final message = result is Map ? (result['error'] as String? ?? '完成') : result.toString();
     ScaffoldMessenger.of(context).showSnackBar(

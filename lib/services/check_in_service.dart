@@ -120,6 +120,9 @@ class CheckInService with ChangeNotifier {
     notifyListeners();
   }
 
+  /// 公开刷新接口，供外部调用以通知监听者
+  void refresh() => notifyListeners();
+
   Future<int> getConsecutiveDays() async => await DatabaseManager.checkInRepository.getConsecutiveDays();
   Future<int> getBestStreak() async => await DatabaseManager.checkInRepository.getBestStreak();
   Future<List<DailyCheckIn>> getHistoricalCheckIns({int days = 60}) async =>

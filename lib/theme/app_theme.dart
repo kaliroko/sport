@@ -22,6 +22,9 @@ class AppTheme {
   
   // 背景色
   static const Color backgroundColor = Color(0xFF0a0a1a);
+
+  // 玻璃色
+  static const Color glassColor = backgroundColor;
   
   // 文字色
   static const Color textPrimary = Color(0xFFFFFFFF);

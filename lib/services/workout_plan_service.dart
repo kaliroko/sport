@@ -1,7 +1,6 @@
 /// 训练计划服务
 library;
 
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:metamorphosis_checkin/models/workout_plan.dart';
 import 'package:metamorphosis_checkin/utils/constants.dart';

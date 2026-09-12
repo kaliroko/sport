@@ -9,7 +9,7 @@ class CustomTask {
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  const CustomTask({
+  CustomTask({
     required this.id,
     required this.name,
     required this.icon,

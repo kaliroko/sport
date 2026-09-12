@@ -15,6 +15,7 @@ import 'package:metamorphosis_checkin/services/user_profile_service.dart';
 import 'package:metamorphosis_checkin/services/check_in_service.dart';
 import 'package:metamorphosis_checkin/services/workout_service.dart';
 import 'package:metamorphosis_checkin/services/workout_plan_service.dart';
+import 'package:metamorphosis_checkin/services/debug_upload_service.dart';
 import 'package:metamorphosis_checkin/database/app_database.dart';
 
 class MetamorphosisApp extends StatelessWidget {

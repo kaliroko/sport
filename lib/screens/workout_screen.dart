@@ -259,9 +259,9 @@ class _WorkoutScreenContentState extends State<_WorkoutScreenContent>
       child: Column(children: [
         Text('😴', style: TextStyle(fontSize: ResponsiveUtils.scaleFont(context, 48))),
         SizedBox(height: ResponsiveUtils.scaleSpacing(context, 16)),
-        Text('今日建议：${suggestions[(dayOfWeek - 1) % suggestions.length]}', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, textAlign: TextAlign.center)),
+        Text('今日建议：${suggestions[(dayOfWeek - 1) % suggestions.length]}', style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
         SizedBox(height: 8),
-        Text('休息日同样重要！良好的恢复让训练效果更好', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13, textAlign: TextAlign.center)),
+        Text('休息日同样重要！良好的恢复让训练效果更好', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13), textAlign: TextAlign.center),
         SizedBox(height: 16),
         Row(children: [
           _RestSuggestionTile(icon: '🚶', text: '散步15分钟'),
@@ -277,11 +277,9 @@ class _WorkoutScreenContentState extends State<_WorkoutScreenContent>
 
 // ─── 计划选择器 ────────────────────────────────────────────────────────────────
 Future<void> _showPlanSelector(BuildContext context, WorkoutPlanService planService) async {
-  await showDialog(
+  await GlassDialog.show<String?>(
     context: context,
-    builder: (_) => GlassDialog.show<String?>(
-      context: context,
-      title: '选择训练计划',
+    title: '选择训练计划',
       content: Column(mainAxisSize: MainAxisSize.min, children: WorkoutPlans.all.map((plan) {
         final isSelected = plan.id == planService.selectedPlanId;
         return GestureDetector(
