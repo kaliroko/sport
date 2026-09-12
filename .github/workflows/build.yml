@@ -69,33 +69,39 @@ jobs:
           echo "flutter.versionCode=1" >> android/local.properties
           echo "flutter.versionName=1.0.0" >> android/local.properties
 
-      # 从仓库 Secrets 还原签名密钥。
-      # 需在 GitHub 仓库 Settings → Secrets and variables → Actions 配置：
-      #   ANDROID_KEYSTORE_BASE64   keystore.jks 的 base64
-      #   ANDROID_KEYSTORE_PASSWORD 密钥库密码
-      #   ANDROID_KEY_ALIAS         密钥别名
-      #   ANDROID_KEY_PASSWORD      密钥密码
-      # 生成第一项的本地命令： base64 -w0 android/app/keystore.jks
-      # 若 Secrets 未配置则跳过，构建回退为 debug 签名（能通过，但不能上架）。
+      # 还原签名密钥 —— 只需要配置 **1 个** Secret。
+      #
+      # 在仓库 Settings → Secrets and variables → Actions 新建：
+      #    名称：ANDROID_SIGNING
+      #    值  ：本地执行下面这条命令的输出（一长串 base64）
+      #
+      #   cd android && tar czf - app/keystore.jks key.properties | base64 -w0
+      #
+      # 这里把一个 tar.gz（含 keystore 与 key.properties）整体 base64，
+      # 所以密码、别名都打包在里面，不必再单独配 4 个 Secret。
+      #
+      # 为什么不能直接把 keystore 提交进仓库：本仓库是**公开**的，
+      # 提交即等于把签名私钥公开发布 —— 任何人都能用同一签名打出被
+      # Android 视为合法更新的 APK，进而冒充本应用向用户推送恶意版本。
+      #
+      # release 构建强制要求自定义签名，因此缺这个 Secret 会直接失败，
+      # 不会退化成 debug 签名。
       - name: Setup signing keystore
         env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_SIGNING: ${{ secrets.ANDROID_SIGNING }}
         run: |
-          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
-            echo "未配置签名 Secrets，将使用 debug 签名"
-            exit 0
+          if [ -z "$ANDROID_SIGNING" ]; then
+            echo "::error::未配置 ANDROID_SIGNING，release 构建必须使用自定义签名。"
+            echo "请在仓库 Settings → Secrets and variables → Actions 新建 Secret："
+            echo "  名称 ANDROID_SIGNING"
+            echo "  值   本地执行： cd android && tar czf - app/keystore.jks key.properties | base64 -w0"
+            exit 1
           fi
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
-          {
-            echo "storePassword=$ANDROID_KEYSTORE_PASSWORD"
-            echo "keyPassword=$ANDROID_KEY_PASSWORD"
-            echo "keyAlias=$ANDROID_KEY_ALIAS"
-            echo "storeFile=app/keystore.jks"
-          } > android/key.properties
-          echo "签名密钥已就绪"
+          echo "$ANDROID_SIGNING" | base64 -d | tar xzf - -C android
+          echo "签名密钥已就绪："
+          ls -la android/app/keystore.jks android/key.properties
+          keytool -list -keystore android/app/keystore.jks \
+            -storepass "$(grep '^storePassword=' android/key.properties | cut -d= -f2)" | tail -3
 
       - name: Get dependencies
         run: flutter pub get

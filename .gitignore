@@ -72,6 +72,9 @@ Thumbs.db
 build/
 **/build/
 
+# 图标素材导入目录（Android Studio Image Asset 导出，不参与构建）
+res/
+
 # Temp files
 *.tmp
 *.temp

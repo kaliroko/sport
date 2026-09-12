@@ -6,7 +6,7 @@
 #
 # ！key.properties 与 *.jks / *.keystore 都已在 .gitignore 中排除。
 #   丢了 keystore 就无法给已发布的应用推更新；泄露了密码别人能冒名签名。
-#   请另外做离线备份。
+#   请另外做离线备份（U 盘 / 密码管理器 / 私有网盘）。
 
 storePassword=你的密钥库密码
 keyPassword=你的密钥密码
@@ -16,7 +16,7 @@ storeFile=app/keystore.jks
 
 
 # ─────────────────────────────────────────────────────────────────────────
-# 生成新密钥（有效期 10000 天 ≈ 27 年；Google Play 要求至少 25 年）
+# 1) 生成新密钥（有效期 10000 天 ≈ 27 年；Google Play 要求至少 25 年）
 #
 #   keytool -genkeypair -v \
 #     -keystore android/app/keystore.jks \
@@ -24,14 +24,28 @@ storeFile=app/keystore.jks
 #     -keyalg RSA -keysize 2048 -validity 10000 \
 #     -alias upload \
 #     -storepass 你的密码 -keypass 你的密码 \
-#     -dname "CN=你的名字, OU=Mobile, O=组织, L=城市, ST=省份, C=CN"
+#     -dname "CN=你的名字"
 #
-# 查看指纹（用于校验，或配置需要签名指纹的第三方 SDK）：
+#   -dname 只是证书上的说明性文字，写什么都能用。
+#   只填 CN 即可；OU / O / L / ST / C 都是可选的（C 是国家代码），
+#   不写完全不影响签名与安装。
+#
+# 2) 查看指纹（用于校验，或配置需要签名指纹的第三方 SDK）
+#
 #   keytool -list -v -keystore android/app/keystore.jks -storepass 你的密码
 #
-# GitHub Actions 请用 Secrets，不要把密钥提交进仓库：
-#   ANDROID_KEYSTORE_BASE64   ← base64 -w0 android/app/keystore.jks 的输出
-#   ANDROID_KEYSTORE_PASSWORD
-#   ANDROID_KEY_ALIAS
-#   ANDROID_KEY_PASSWORD
+# 3) 让 GitHub Actions 用上这个密钥 —— 只需配置 1 个 Secret
+#
+#   仓库 Settings → Secrets and variables → Actions → New repository secret
+#     名称：ANDROID_SIGNING
+#     值  ：本地执行下面这条命令的输出（一长串 base64，整段复制）
+#
+#   cd android && tar czf - app/keystore.jks key.properties | base64 -w0
+#
+#   tar 包里同时含有 keystore 与 key.properties，所以密码和别名都在里面，
+#   不需要再单独配 storePassword / keyAlias 等 Secret。
+#
+#   ！本仓库是公开仓库，绝对不要把 keystore.jks 或 key.properties
+#     提交进去 —— 那等于把签名私钥公开发布：任何人都能用同一签名打出
+#     被 Android 视为"合法更新"的 APK，冒充本应用向用户推送恶意版本。
 # ─────────────────────────────────────────────────────────────────────────
