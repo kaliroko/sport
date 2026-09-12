@@ -9,13 +9,16 @@
 /// 照片仅存于应用私有目录，不做任何上传。
 library;
 
+import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:metamorphosis_checkin/services/desire_space_service.dart';
 import 'package:metamorphosis_checkin/theme/app_theme.dart';
+import 'package:metamorphosis_checkin/utils/desire_popup_texts.dart';
 import 'package:metamorphosis_checkin/utils/responsive_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -226,12 +229,21 @@ class _SpaceContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
+    // 弹窗随机池 = 你在 App 里「添加提醒」写的内容 + desire_popup_texts.dart 里手写的内容
+    final pool = <String>[
+      ...service.notes,
+      ...kDesirePopupTexts,
+    ];
+
+    return Stack(
+      children: [
+        ListView(
       padding: EdgeInsets.fromLTRB(
         ResponsiveUtils.scalePadding(context, 16),
         ResponsiveUtils.scalePadding(context, 16),
         ResponsiveUtils.scalePadding(context, 16),
-        ResponsiveUtils.bottomSafePadding(context),
+        // 额外留出底部弹窗控制栏的高度，避免最后一块内容被它挡住
+        ResponsiveUtils.bottomSafePadding(context) + 70,
       ),
       children: [
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
@@ -336,6 +348,12 @@ class _SpaceContent extends StatelessWidget {
             onPressed: () => _confirmRemovePhoto(context),
             child: Text('删除照片', style: TextStyle(color: AppTheme.errorColor.withValues(alpha: 0.8), fontSize: ResponsiveUtils.scaleFont(context, 12))),
           )),
+      ],
+        ),
+
+        // 弹窗层放在内容之上；它的控制条又在所有弹窗之上，
+        // 保证任何时候都能一键停下来，不会被自己弹出来的东西挡住。
+        _PopupStorm(pool: pool),
       ],
     );
   }
@@ -461,5 +479,190 @@ class _SpaceContent extends StatelessWidget {
       ),
     );
     if (confirmed == true) await service.removePhoto();
+  }
+}
+
+// ─── 弹窗层 ──────────────────────────────────────────────────────────────────
+/// 进入本页后立即开始、源源不断弹出的文字弹窗，散布在屏幕不同位置。
+///
+/// 工程约束（很重要）：
+///  · 并发上限 kDesirePopupMaxConcurrent —— 每个弹窗都是独立 widget + 合成层，
+///    不设上限会迅速压垮渲染（掉帧 / 发热，严重时 OOM 闪退）。
+///  · 每个弹窗到时间自动消失；点位取自「网格 + 抖动」，比纯随机更均匀。
+///  · 用普通 Container 而不是 GlassCard：玻璃卡片每张都会 pushLayer，
+///    十几个叠在一起 GPU 就直接爆了。
+///  · 底部固定一条控制栏（暂停 / 继续 / 清空），永远在最上层 ——
+///    避免弹窗把操作挡死，变成自己出不去。
+///  · 点任意弹窗即可单独关掉它。
+class _PopupStorm extends StatefulWidget {
+  final List<String> pool;
+  const _PopupStorm({required this.pool});
+
+  @override
+  State<_PopupStorm> createState() => _PopupStormState();
+}
+
+class _PopupItem {
+  final int id;
+  final String text;
+  final double fx; // 0~1 横向比例
+  final double fy; // 0~1 纵向比例
+  final int bornMs;
+
+  _PopupItem({
+    required this.id,
+    required this.text,
+    required this.fx,
+    required this.fy,
+    required this.bornMs,
+  });
+}
+
+class _PopupStormState extends State<_PopupStorm> {
+  final List<_PopupItem> _items = [];
+  final math.Random _random = math.Random();
+  Timer? _spawnTimer;
+  Timer? _sweepTimer;
+  int _nextId = 0;
+  bool _running = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // 一进页面立刻先弹一个，不用等第一个周期
+    WidgetsBinding.instance.addPostFrameCallback((_) => _spawn());
+    _spawnTimer = Timer.periodic(kDesirePopupInterval, (_) => _spawn());
+    _sweepTimer = Timer.periodic(const Duration(milliseconds: 500), (_) => _sweep());
+  }
+
+  @override
+  void dispose() {
+    _spawnTimer?.cancel();
+    _sweepTimer?.cancel();
+    super.dispose();
+  }
+
+  void _spawn() {
+    if (!mounted || !_running) return;
+    if (widget.pool.isEmpty) return;
+    if (_items.length >= kDesirePopupMaxConcurrent) return;
+    setState(() {
+      _items.add(_PopupItem(
+        id: _nextId++,
+        text: widget.pool[_random.nextInt(widget.pool.length)],
+        fx: ((_random.nextInt(3) + _random.nextDouble()) / 3).clamp(0.0, 1.0),
+        fy: ((_random.nextInt(5) + _random.nextDouble()) / 5).clamp(0.0, 1.0),
+        bornMs: DateTime.now().millisecondsSinceEpoch,
+      ));
+    });
+  }
+
+  void _sweep() {
+    if (!mounted) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final life = kDesirePopupLifetime.inMilliseconds;
+    if (!_items.any((e) => now - e.bornMs > life)) return;
+    setState(() => _items.removeWhere((e) => now - e.bornMs > life));
+  }
+
+  void _dismiss(_PopupItem item) {
+    setState(() => _items.removeWhere((e) => e.id == item.id));
+  }
+
+  void _toggleRunning() {
+    setState(() => _running = !_running);
+    if (_running) _spawn();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(builder: (context, constraints) {
+      final double cardWidth = constraints.maxWidth * kDesirePopupWidthFactor;
+      // 用于夹紧位置，保证弹窗不会被挤出屏幕（高度为估算值）
+      const double estimatedHeight = 150;
+      // 注意用 0.0 而不是 0：math.max 的泛型会按两个实参推断，
+      // 传 (int, double) 会推断成 num，赋给 double 直接编译失败。
+      final double maxLeft = math.max(0.0, constraints.maxWidth - cardWidth);
+      final double maxTop = math.max(0.0, constraints.maxHeight - estimatedHeight);
+
+      return Stack(children: [
+        for (final item in _items)
+          Positioned(
+            left: item.fx * maxLeft,
+            top: item.fy * maxTop,
+            child: _bubble(context, item, cardWidth),
+          ),
+
+        Positioned(
+          left: 0,
+          right: 0,
+          // 抬到悬浮导航栏之上
+          bottom: ResponsiveUtils.bottomSafePadding(context),
+          child: _controls(context),
+        ),
+      ]);
+    });
+  }
+
+  Widget _bubble(BuildContext context, _PopupItem item, double width) {
+    return GestureDetector(
+      onTap: () => _dismiss(item),
+      child: SizedBox(
+        width: width,
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: ResponsiveUtils.scalePadding(context, 14),
+            vertical: ResponsiveUtils.scalePadding(context, 12),
+          ),
+          decoration: BoxDecoration(
+            // 接近不透明的实色 + 描边，而不是玻璃卡片
+            color: const Color(0xF21A1A2E),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppTheme.secondaryColor.withValues(alpha: 0.65), width: 1.5),
+          ),
+          child: Text(
+            item.text,
+            maxLines: 4,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: ResponsiveUtils.scaleFont(context, 13),
+              height: 1.45,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _controls(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: ResponsiveUtils.scalePadding(context, 12)),
+      padding: EdgeInsets.symmetric(
+        horizontal: ResponsiveUtils.scalePadding(context, 12),
+        vertical: ResponsiveUtils.scalePadding(context, 6),
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xF2101018),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        Text('弹窗 ${_items.length} / $kDesirePopupMaxConcurrent',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: ResponsiveUtils.scaleFont(context, 12))),
+        Row(children: [
+          TextButton(
+            onPressed: _toggleRunning,
+            child: Text(_running ? '暂停弹窗' : '继续弹窗',
+                style: TextStyle(color: AppTheme.primaryColor, fontSize: ResponsiveUtils.scaleFont(context, 12.5))),
+          ),
+          TextButton(
+            onPressed: () => setState(_items.clear),
+            child: Text('清空',
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: ResponsiveUtils.scaleFont(context, 12.5))),
+          ),
+        ]),
+      ]),
+    );
   }
 }
