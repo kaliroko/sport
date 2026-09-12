@@ -2,8 +2,6 @@
 # Flutter 引擎相关类必须保留，否则 App 崩溃
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.** { *; }
-# 我们的自定义 Application 类
--keep class com.metamorphosis.checkin.FlutterApp { *; }
 
 # MainActivity 必须保留
 -keep class com.metamorphosis.checkin.MainActivity { *; }
