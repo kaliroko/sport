@@ -73,31 +73,60 @@ jobs:
       #
       # 在仓库 Settings → Secrets and variables → Actions 新建：
       #    名称：ANDROID_SIGNING
-      #    值  ：本地执行下面这条命令的输出（一长串 base64）
+      #    值  ：本地执行下面这条命令的输出（一整行 base64，约 3700+ 字符）
       #
-      #   cd android && tar czf - app/keystore.jks key.properties | base64 -w0
+      #   cd android && tar czf - app/keystore.jks key.properties | base64 | tr -d '\n'
       #
-      # 这里把一个 tar.gz（含 keystore 与 key.properties）整体 base64，
-      # 所以密码、别名都打包在里面，不必再单独配 4 个 Secret。
+      # 注意用 `base64 | tr -d '\n'` 而不是 `base64 -w0`：
+      # -w0 是 GNU 专有参数，macOS 的 base64 不支持，会直接报 invalid option，
+      # 结果把报错信息当成 Secret 粘贴进来，CI 端就会 "base64: invalid input"。
+      # 上面这条两种系统都能跑。
+      #
+      # 粘贴前建议先自检内容完整（会列出 tar 里的文件，列出即正常）：
+      #   cd android && tar czf - app/keystore.jks key.properties | base64 | tr -d '\n' > /tmp/signing.txt
+      #   cat /tmp/signing.txt | base64 -d | tar tzf -
       #
       # 为什么不能直接把 keystore 提交进仓库：本仓库是**公开**的，
       # 提交即等于把签名私钥公开发布 —— 任何人都能用同一签名打出被
       # Android 视为合法更新的 APK，进而冒充本应用向用户推送恶意版本。
-      #
-      # release 构建强制要求自定义签名，因此缺这个 Secret 会直接失败，
-      # 不会退化成 debug 签名。
       - name: Setup signing keystore
         env:
           ANDROID_SIGNING: ${{ secrets.ANDROID_SIGNING }}
         run: |
-          if [ -z "$ANDROID_SIGNING" ]; then
+          set -euo pipefail
+
+          if [ -z "${ANDROID_SIGNING:-}" ]; then
             echo "::error::未配置 ANDROID_SIGNING，release 构建必须使用自定义签名。"
             echo "请在仓库 Settings → Secrets and variables → Actions 新建 Secret："
             echo "  名称 ANDROID_SIGNING"
-            echo "  值   本地执行： cd android && tar czf - app/keystore.jks key.properties | base64 -w0"
+            echo "  值   本地执行：cd android && tar czf - app/keystore.jks key.properties | base64 | tr -d '\\n'"
             exit 1
           fi
-          echo "$ANDROID_SIGNING" | base64 -d | tar xzf - -C android
+
+          # 诊断信息：长度能直接看出粘贴是否被截断（完整约 3700+ 字符）
+          echo "ANDROID_SIGNING 长度: ${#ANDROID_SIGNING} 字符"
+
+          # 容忍粘贴时混入的空格 / 换行 / 制表符
+          CLEAN_B64="$(printf '%s' "$ANDROID_SIGNING" | tr -d '[:space:]')"
+
+          if ! printf '%s' "$CLEAN_B64" | base64 --decode > /tmp/signing.tar.gz 2>/tmp/b64err; then
+            echo "::error::base64 解码失败 —— Secret 内容不是合法的 base64。"
+            echo "常见原因："
+            echo "  1) 复制不完整：base64 很长，终端软换行时容易漏掉尾部"
+            echo "  2) 粘贴的是命令的报错信息，而不是它的输出"
+            echo "     （macOS 上 base64 -w0 不支持，会报 invalid option）"
+            echo "  3) 值里被混进了引号或提示符"
+            echo "--- base64 的报错 ---"
+            cat /tmp/b64err || true
+            exit 1
+          fi
+
+          if ! tar xzf /tmp/signing.tar.gz -C android 2>/tmp/tarerr; then
+            echo "::error::解包失败 —— Secret 能解码但不是有效的 tar.gz，多半是内容被截断。"
+            cat /tmp/tarerr || true
+            exit 1
+          fi
+
           echo "签名密钥已就绪："
           ls -la android/app/keystore.jks android/key.properties
           keytool -list -keystore android/app/keystore.jks \
