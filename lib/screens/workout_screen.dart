@@ -26,6 +26,9 @@ class _WorkoutScreenContent extends StatefulWidget {
 }
 
 class _WorkoutScreenContentState extends State<_WorkoutScreenContent> with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => false;
+
   int? _selectedExerciseIndex;
   bool _isTimerActive = false;
   int _timerSeconds = 0;
@@ -99,6 +102,7 @@ class _WorkoutScreenContentState extends State<_WorkoutScreenContent> with Ticke
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final workoutType = getTodayWorkoutType();
     final movements = getTodayMovements();
     final week = context.watch<UserProfileService>().profile?.currentWeek ?? 1;

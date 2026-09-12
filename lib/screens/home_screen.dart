@@ -31,6 +31,9 @@ class _HomeScreenContent extends StatefulWidget {
 
 class _HomeScreenContentState extends State<_HomeScreenContent>
     with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => false;
+
   late AnimationController _checkController;
   late Animation<double> _checkAnimation;
   bool _showCelebration = false;
@@ -66,6 +69,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final service = context.watch<CheckInService>();
     final tasks = AppConstants.dailyTasks;
     final today = DateTime.now();
