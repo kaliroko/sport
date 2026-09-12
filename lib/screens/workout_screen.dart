@@ -25,7 +25,7 @@ class _WorkoutScreenContent extends StatefulWidget {
   State<_WorkoutScreenContent> createState() => _WorkoutScreenContentState();
 }
 
-class _WorkoutScreenContentState extends State<_WorkoutScreenContent> with TickerProviderStateMixin {
+class _WorkoutScreenContentState extends State<_WorkoutScreenContent> with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   int? _selectedExerciseIndex;
   bool _isTimerActive = false;
   int _timerSeconds = 0;

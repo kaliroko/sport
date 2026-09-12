@@ -20,11 +20,20 @@ class StatsScreen extends StatelessWidget {
   }
 }
 
-class _StatsScreenContent extends StatelessWidget {
+class _StatsScreenContent extends StatefulWidget {
   const _StatsScreenContent();
 
   @override
+  State<_StatsScreenContent> createState() => _StatsScreenContentState();
+}
+
+class _StatsScreenContentState extends State<_StatsScreenContent> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => false;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     return AdaptiveLiquidGlassLayer(
       settings: const LiquidGlassSettings(),
       quality: GlassQuality.standard,
