@@ -91,11 +91,6 @@ class _WorkoutScreenContentState extends State<_WorkoutScreenContent>
     return planService.getTodayType();
   }
 
-  String getSelectedPlanName() {
-    final planService = context.read<WorkoutPlanService>();
-    return context.read<WorkoutPlanService>().selectedPlan.name;
-  }
-
   @override
   Widget build(BuildContext context) {
     super.build(context);

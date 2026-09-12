@@ -1,15 +1,20 @@
 /// 应用常量配置
 library;
 
-
-// 训练类型
-enum WorkoutType { strength, cardio, stretch, rest }
+// ─── 训练类型 / 强度等级 ──────────────────────────────────────────────────────
+// 唯一来源是 models/workout_log.dart —— 那边负责与数据库
+// workout_type / intensity 两个列的字符串互转（_parseWorkoutType 等）。
+//
+// 这里历史上重复声明过同名的 WorkoutType / Intensity，而 Dart 会把它们
+// 当作**两个完全不同的类型**：把 constants 的 WorkoutType 传给 WorkoutLog
+// 的 workoutType 参数会直接编译报错（argument_type_not_assignable）。
+// 改为 re-export 后全局只剩一个定义，同时保持 `import constants.dart`
+// 的旧代码继续可见。
+export 'package:metamorphosis_checkin/models/workout_log.dart'
+    show WorkoutType, Intensity;
 
 // 动作类型
 enum MovementType { reps, duration }
-
-// 强度等级
-enum Intensity { easy, moderate, hard, exhausting }
 
 // 每日任务配置
 class TaskConfig {
