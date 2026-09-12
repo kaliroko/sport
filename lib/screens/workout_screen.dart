@@ -277,9 +277,11 @@ class _WorkoutScreenContentState extends State<_WorkoutScreenContent>
 
 // ─── 计划选择器 ────────────────────────────────────────────────────────────────
 Future<void> _showPlanSelector(BuildContext context, WorkoutPlanService planService) async {
-  await GlassDialog.show<String?>(
+  final planId = await showDialog<String?>(
     context: context,
-    title: '选择训练计划',
+    builder: (_) => GlassDialog.show<String?>(
+      context: context,
+      title: '选择训练计划',
       content: Column(mainAxisSize: MainAxisSize.min, children: WorkoutPlans.all.map((plan) {
         final isSelected = plan.id == planService.selectedPlanId;
         return GestureDetector(
@@ -310,9 +312,8 @@ Future<void> _showPlanSelector(BuildContext context, WorkoutPlanService planServ
         GlassDialogAction(label: '确认', isPrimary: true, onPressed: () => Navigator.pop(context, planService.selectedPlanId)),
       ],
     ),
-  ).then((planId) {
-    if (planId != null && context.mounted) planService.selectPlan(planId);
-  });
+  );
+  if (planId != null && context.mounted) planService.selectPlan(planId);
 }
 
 // ─── 休息日建议卡片 ────────────────────────────────────────────────────────────

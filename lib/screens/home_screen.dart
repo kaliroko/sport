@@ -37,6 +37,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
   late AnimationController _checkController;
   late Animation<double> _checkAnimation;
   bool _showCelebration = false;
+  String? _lastCheckedTask;
 
   @override
   void initState() {
